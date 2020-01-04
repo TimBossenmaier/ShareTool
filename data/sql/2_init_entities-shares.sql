@@ -7,7 +7,7 @@ CREATE TABLE entities.shares
 	comment text COLLATE pg_catalog."default",
 	currency integer NOT NULL,
 	CONSTRAINT shares_pkey PRIMARY KEY ("ID"),
-	CONSTRAINT companies_isin_unique UNIQUE (isin)
+	CONSTRAINT companies_isin_unique UNIQUE (isin),
 
 	CONSTRAINT shares_category_fkey FOREIGN KEY (category)
 		REFERENCES param.categories ("ID") MATCH SIMPLE
