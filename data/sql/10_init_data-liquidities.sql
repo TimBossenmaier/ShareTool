@@ -1,6 +1,6 @@
 CREATE TABLE data.liquidities
 (
-	"ID" integer NOT NULL DEFAULT nextval('data."liquidities_ID_seq"'::regclass),
+	"ID" SERIAL NOT NULL,
 	share integer NOT NULL,
 	year integer NOT NULL,
 	current_ratio double precision NOT NULL,
@@ -18,6 +18,6 @@ TABLESPACE pg_default;
 ALTER TABLE data.liquidities
 	OWNER TO postgres;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE data.liquidites TO db_tool_user;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE data.liquidities TO db_tool_user;
 
 GRANT ALL ON TABLE data.liquidities TO postgres;
