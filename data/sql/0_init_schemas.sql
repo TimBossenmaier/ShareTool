@@ -4,5 +4,5 @@ CREATE SCHEMA data
 CREATE SCHEMA entities
 	AUTHORIZATION db_tool_user;
 
-CREATE SCHMEMA param
+CREATE SCHEMA param
 	AUTHORIZATION db_tool_user;
