@@ -1,0 +1,8 @@
+CREATE SCHEMA data
+	AUTHORIZATION db_tool_user;
+
+CREATE SCHEMA entities
+	AUTHORIZATION db_tool_user;
+
+CREATE SCHMEMA param
+	AUTHORIZATION db_tool_user;
