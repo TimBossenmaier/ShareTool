@@ -1,6 +1,6 @@
 CREATE TABLE data."sharePrices"
 (
-	"ID" integer NOT NULL DEFAULT nextval('data."share_prices_ID_seq"'::regclass),
+	"ID" SERIAL NOT NULL,
 	share integer NOT NULL,
 	share_price double precision NOT NULL,
 	valid_from timestamp(4) without time zone NOT NULL,

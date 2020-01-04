@@ -1,6 +1,6 @@
 CREATE TABLE data."PERs"
 (
-	"ID" integer NOT NULL DEFAULT nextval('data."per_ID_seq"'::regclass),
+	"ID" SERIAL NOT NULL,
 	share integer NOT NULL,
 	"PE_ratio" double precision NOT NULL,
 	year integer NOT NULL,

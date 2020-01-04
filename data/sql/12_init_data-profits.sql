@@ -1,6 +1,6 @@
 CREATE TABLE data.profits
 (
-	"ID" integer NOT NULL DEFAULT nextval('data."profits_ID_seq"'::regclass),
+	"ID" SERIAL NOT NULL,
 	year integer NOT NULL,
 	share integer NOT NULL,
 	profit double precision NOT NULL,
