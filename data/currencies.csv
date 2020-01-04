@@ -1,0 +1,157 @@
+﻿ID;currency_code;currency_name
+1;AED;VAE Dirham
+2;AFN;Afghani
+3;EGP;Ägyptisches Pfund
+4;ALL;Lek
+5;DZD;Algerischer Dollar
+6;USD;US Dollar
+7;EUR;Euro
+8;AOA;Kwanza
+9;XCD;Ostkaribischer Dollar
+10;XAF;CFA-Franc BEAC
+11;ARS;Argentinischer Peso
+12;AMD;Dram
+13;AWG;Aruba-Florin
+14;AZN;Aserbaidschan-Manat
+15;ETB;Äthiopischer Birr
+16;AUD;Australischer Dollar
+17;BSD;Bahama-Dollar
+18;BHD;Bahrain-Dollar
+19;BDT;Taka
+20;BBD;Barbados-Dollar
+21;BYN;Weißrussischer Rubel
+22;BZD;Belize-Dollar
+23;XOF;CFA-Franc BXEAO
+24;BMD;Bermuda-Dollar
+25;BTN;Ngultrum
+26;BOB;Boliviano
+27;BAM;Konvertible Mark
+28;BWP;Botswanischer Paula
+29;BRL;Brasilianischer Real
+30;BND;Brunei-Dollar
+31;BGN;Lew
+32;XOF;CFA-Franc BCEAO
+33;BIF;Burundi-Franc
+34;CVE;Kap-Verde-Escudo
+35;CLP;Chilenischer Peso
+36;CNY;Chinesischer Yuan
+37;NZD;Neuseeland-Dollar
+38;CRC;Costa-Rica Colón
+39;ANG;Antillen-Gulden
+40;DKK;Dänische Krone
+41;DOP;Dominikanischer Peso
+42;DJF;Dschibuti-Franc
+43;ERN;Nakfa
+44;SZL;Lilangeni
+45;FKP;Falkland-Pfund
+46;DKK;Färöische Krone
+47;FJD;Fidschi-Dollar
+48;XPF;CFP-Franc
+49;GMD;Dalasi
+50;ILS;Neuer Schekel
+51;GEL;Lari
+52;GHS;Ghanaischer Cedi
+53;GIP;Gibraltar-Pfund
+54;GBP;Pfund Sterling
+55;GTQ;Quetzal
+56;GNF;Guinea-Franc
+57;GYD;Guyana-Dollar
+58;HTG;Gourde
+59;HNL;Lempira
+60;HKD;Hongkong-Dollar
+61;INR;Indische Rupie
+62;IDR;Indonesische Rupiah
+63;IQD;Irakischer Dinar
+64;IRR;Iranischer Rial
+65;ISK;Isländische Krone
+66;JMD;Jamaikanischer Dollar
+67;JPY;Yen
+68;YER;Jemen-Rial
+69;JOD;Jordanischer Dinar
+70;KYD;Kaiman-Dollar
+71;KHR;Riel
+72;CAD;Kanadischer Dollar
+73;KZT;Tenge
+74;QAR;Katar-Rial
+75;KES;Kenia-Schilling
+76;KGS;Som
+77;COP;Kolumbianianischer Peso
+78;KMF;Komoren-Franc
+79;CDF;Kongo-Franc
+80;KPW;Nordkoreanischer Won
+81;KRW;Südkoreanischer Won
+82;HRK;Kroatische Kuna
+83;CUP;Kubanischer Peso
+84;KWD;Kuwait-Dinar
+85;LAK;Laotischer Kip
+86;LSL;Loti
+87;LBP;Libanesisches Pfund
+88;LRD;Liberianischer Dollar
+89;LYD;Libyscher Dinar
+90;CHF;Schweizer Franken
+91;MOP;Pataca
+92;MAG;Ariary
+93;MWK;Malawi-Kwacha
+94;MYR;Malaysischer Ringgit
+95;MVR;Rufiyaa
+96;MAD;Marokkanischer Dirham
+97;MRU;Ouguiya
+98;MUR;Mauritius-Rupie
+99;MXN;Mexikanischer Peso
+100;MDL;Moldauscher Leu
+101;MNT;Tögrög
+102;MZN;Metical
+103;MMK;Kyat
+104;NAD;Namibischer Dollar
+105;NPR;Nepalesische Rupie
+106;NIO;Córdonba Oro
+107;NGN;Naira
+108;MKD;Mazedonischer Denar
+109;TRY;Neue Lira
+110;NOK;Norwegische Krone
+111;OMR;Omanischer Real
+112;PKR;Pakistanische Rupie
+113;PAB;Panamaischer Balboa
+114;PGK;Kina
+115;PYG;Paraguayischer Guaraní
+116;PEN;Peruanischer Sol
+117;PHP;Philippinischer Peso
+118;PLN;Zloty
+119;RWF;Ruanda-Franc
+120;RON;Rumänischer Leu
+121;RUB;Russischer Rubel
+122;SBD;Salomonen-Dollar
+123;ZMW;Sambischer Kwacha
+124;WST;Samoanischer Tala
+125;STN;Sao-toméischer Dobra
+126;SAR;Saudi-Rial
+127;SEK;Schwdische Krone
+128;RSD;Serbischer Dinar
+129;SCR;Seychellen-Rupie
+130;SLL;Sierra-leonischer Leone
+131;ZWL;Simbabwe-Dollar
+132;SGD;Singapur-Dollar
+133;SOS;Somalia-Schilling
+134;LKR;Sri Lanka-Rupie
+135;ZAR;Südafrikanischer Rand
+136;SDG;Sudanesisches Pfund
+137;SSP;Südsudanesisches Pfund
+138;SRD;Suriname-Dollar
+139;SYP;Syrisches Pfund
+140;TJS;Somoni
+141;TWD;Taiwan-Dollar
+142;TZS;Tansania-Schilling
+143;THB;Baht
+144;TOP;Pa'anga
+145;TTD;Trinidad und Tobago Dollar
+146;CZK;Tschechische Krone
+147;TND;Tunesischer Dinar
+148;TMT;Turkmenistan-Manat
+149;UGX;Uganda-Schilling
+150;UAH;Hrywna
+151;HUF;Forint
+152;UYU;Uruguayischer Peso
+153;UZS;So'm
+154;VUV;Vatu
+155;VES;Venezolanischer Bolívar
+156;VND;Vietnamesischer Dong

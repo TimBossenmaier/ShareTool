@@ -1,0 +1,25 @@
+﻿Sector ID;Name
+500;Erdöl und Erdgass
+1300;Chemie
+1700;Rohstoffe
+2300;Bauwesen und Materialien
+2710;Luftfahrt und Verteidigung
+2720;Allgmeine Industrieunternehmen
+2750;Produktionstechnik
+2770;Transport
+3300;Automobil
+3500;Nahrungsmittel
+3700;Konsumgüter
+4500;Gesundheit
+5300;Einzelhandel
+5500;Medien
+5700;Reisen und Freizeit
+6500;Telekommunikation
+7500;Energieversorgung
+8300;Banken
+8500;Versicherung
+8600;Immobilien
+8700;Finanzdienstleistung
+9530;Software- und Computer Dienstleister
+9570;Hardware und Ausrüstung
+9999;Holding
