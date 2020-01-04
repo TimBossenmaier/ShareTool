@@ -1,6 +1,6 @@
 CREATE TABLE data."grossMargins"
 (
-	"ID" integer NOT NULL DEFAULT nextval('data.gross_margins_ID_seq"'::regclass),
+	"ID" SERIAL NOT NULL,
 	share integer NOT NULL,
 	year integer NOT NULL,
 	gross_margin double precision NOT NULL,

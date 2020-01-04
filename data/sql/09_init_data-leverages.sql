@@ -1,6 +1,6 @@
 CREATE TABLE data.leverages
 (
-	"ID" integer NOT NULL DEFAULT nextval('data."leverages_ID_seq"'::regclass),
+	"ID" SERIAL NOT NULL,
 	share integer NOT NULL,
 	year integer NOT NULL,
 	debt_to_equity_ratio double precision NOT NULL,
