@@ -1,6 +1,9 @@
 #exclude file for notes
 docu.txt
 
+#exclude file for db config
+db_config.json
+
 
 ##############PYTHON TEMPLATE#################
 
