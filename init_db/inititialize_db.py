@@ -29,9 +29,11 @@ for each_file in list_sql_files:
 
     except (Exception, psycopg2.Error) as error:
         print("Error while creating " + each_file[8:-4], error, sep="\n")
-
-
-
+     
+    
+"""
+Insert the values for the param tables from the corresponding csv files
+"""
 list_filenames = listdir('./data/')
 list_filenames_csv = [filename for filename in list_filenames if filename.endswith('csv')]
 
