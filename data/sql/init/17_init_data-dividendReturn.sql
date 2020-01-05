@@ -5,7 +5,7 @@ CREATE TABLE data."dividendReturns"
 	dividend_return double precision NOT NULL,
 	valid_from timestamp(4) without time zone NOT NULL,
 	valid_to timestamp(4) without time zone NOT NULL,
-	share integer NOT NULL,
+	share_ID integer NOT NULL,
 	CONSTRAINT "dividendReturns_pkey" PRIMARY KEY ("ID"),
 	CONSTRAINT "dividendReturns_share_fkey" FOREIGN KEY (share)
 		REFERENCES entities.shares("ID") MATCH SIMPLE

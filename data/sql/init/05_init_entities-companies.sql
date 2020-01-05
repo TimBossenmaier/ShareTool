@@ -1,9 +1,9 @@
 CREATE TABLE entities.companies
 (
-	name text COLLATE pg_catalog."default" NOT NULL,
-	country SERIAL NOT NULL,
+	company_name text COLLATE pg_catalog."default" NOT NULL,
+	country_ID integer NOT NULL,
 	"ID" SERIAL NOT NULL,
-	sector SERIAL NOT NULL,
+	sector_ID integer NOT NULL,
 	CONSTRAINT companies_pkey PRIMARY KEY ("ID"),
 	CONSTRAINT companies_country_fkey FOREIGN KEY (country)
 		REFERENCES param.countries("ID") MATCH SIMPLE

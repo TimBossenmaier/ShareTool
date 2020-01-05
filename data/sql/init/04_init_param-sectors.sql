@@ -1,7 +1,7 @@
 CREATE TABLE param.sectors
 (
 	"ID" SERIAL NOT NULL,
-	name text COLLATE pg_catalog."default" NOT NULL,
+	sector_name text COLLATE pg_catalog."default" NOT NULL,
 	CONSTRAINT segment_pkey PRIMARY KEY ("ID")
 )
 

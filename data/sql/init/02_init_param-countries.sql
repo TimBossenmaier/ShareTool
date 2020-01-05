@@ -1,8 +1,8 @@
 CREATE TABLE param.countries
 (
 	"ID" integer NOT NULL,
-	iso text COLLATE pg_catalog."default",
-	name text COLLATE pg_catalog."default",
+	iso text COLLATE pg_catalog."default" NOT NULL,
+	country_name text COLLATE pg_catalog."default" NOT NULL,
 	CONSTRAINT countries_pkey PRIMARY KEY ("ID"),
 	CONSTRAINT "unique" UNIQUE (iso)
 

@@ -1,7 +1,7 @@
 CREATE TABLE data.estimations
 (
 	"ID" SERIAL NOT NULL,
-	share integer NOT NULL,
+	share_ID integer NOT NULL,
 	year integer NOT NULL,
 	profit_per_share double precision NOT NULL,
 	dividend double precision NOT NULL,

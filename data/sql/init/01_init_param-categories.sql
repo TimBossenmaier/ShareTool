@@ -1,7 +1,7 @@
 CREATE TABLE param.categories
 (
 	"ID" integer NOT NULL,
-	name text COLLATE pg_catalog."default" NOT NULL,
+	category_name text COLLATE pg_catalog."default" NOT NULL,
 	CONSTRAINT categories_pkey PRIMARY KEY ("ID")
 )
 

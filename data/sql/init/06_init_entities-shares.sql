@@ -1,11 +1,11 @@
 CREATE TABLE entities.shares
 (
 	"ID" SERIAL NOT NULL,
-	company integer NOT NULL,
+	company_ID integer NOT NULL,
 	isin text COLLATE pg_catalog."default" NOT NULL,
-	category integer NOT NULL,
+	category_ID integer NOT NULL,
 	comment text COLLATE pg_catalog."default",
-	currency integer NOT NULL,
+	currency_ID integer NOT NULL,
 	CONSTRAINT shares_pkey PRIMARY KEY ("ID"),
 	CONSTRAINT companies_isin_unique UNIQUE (isin),
 

@@ -1,7 +1,7 @@
 CREATE TABLE data."sharePrices"
 (
 	"ID" SERIAL NOT NULL,
-	share integer NOT NULL,
+	share_ID integer NOT NULL,
 	share_price double precision NOT NULL,
 	valid_from timestamp(4) without time zone NOT NULL,
 	valid_to timestamp(4) without time zone NOT NULL,
