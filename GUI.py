@@ -1,14 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-from DB_Communication import connect_to_db
+import DB_Communication
 
 from PIL import ImageTk
 
 
 HEADING1_FONT = ("Open Sans", 16, "bold")
 LARGE_FONT = ("Open Sans", 12)
-NORMAL_FONT = ("Open Sans", 10)
+NORMAL_FONT = ("Open Sans", 11)
 SMALL_FONT = ("Open Sans", 8)
 
 
@@ -41,6 +41,13 @@ class ShareToolGUI(tk.Tk):
         # add optical seperator
         menu_main.add_separator()
 
+        # add option to check connectivity
+        menu_main.add_command(label="Check Connection to DB",
+                              command=lambda: messagebox.showinfo(title='Stay tuned!',
+                                                                  message="Unfortunately not supported yet"))
+        # add optical seperator
+        menu_main.add_separator()
+
         # add exit command
         menu_main.add_command(label="Exit", command=quit)
 
@@ -48,20 +55,20 @@ class ShareToolGUI(tk.Tk):
 
         # create menu for new entries
         menu_new = tk.Menu(menubar, tearoff=0)
-        menu_new.add_command(label="entities",
+        menu_new.add_command(label="Entities",
                              command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                  message="Unfortunately not supported yet"))
-        menu_new.add_command(label="data",
+        menu_new.add_command(label="Data",
                              command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                  message="Unfortunately not supported yet"))
         menubar.add_cascade(label="New", menu=menu_new)
 
         # create menu for updating entries
         menu_update = tk.Menu(menubar, tearoff=0)
-        menu_update.add_command(label="entities",
+        menu_update.add_command(label="Entities",
                                 command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                     message="Unfortunately not supported yet"))
-        menu_update.add_command(label="data",
+        menu_update.add_command(label="Data",
                                 command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                     message="Unfortunately not supported yet"))
         menubar.add_cascade(label="Update", menu=menu_update)
@@ -129,6 +136,23 @@ class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
+        # create heading
+        label_heading = ttk.Label(self, text="Status des Share Management Tools", font=HEADING1_FONT)
+        label_heading.place(x=480, y=50, anchor='center')
+
+        # create heading number of shares
+        label_heading_no_of_shares = ttk.Label(self, text="Anzahl der verwalteten Aktien", font=LARGE_FONT)
+        label_heading_no_of_shares.place(x=200, y=125, anchor='center')
+
+        # create label for number of shares
+        label_no_of_shares = ttk.Label(self, text="150", font=NORMAL_FONT)
+        label_no_of_shares.place(x=200, y=150, anchor='center')
+
+        change_label_number_of_shares(label_no_of_shares)
+
+
+
+
 
 def change_label_according_to_db_availability(label):
     """
@@ -137,7 +161,7 @@ def change_label_according_to_db_availability(label):
     :return: True or False, depending on accessibility
     """
 
-    db_connection = connect_to_db()
+    db_connection = DB_Communication.connect_to_db()
 
     if db_connection is not None:
 
@@ -147,3 +171,26 @@ def change_label_according_to_db_availability(label):
         messagebox.showerror("Connection Error", "The connection to the database could not be established. "
                                                  "Please check the configuration of the database in db_config.json")
         return False
+
+
+def change_label_number_of_shares(label):
+    """
+    Get the total number of shares that are currently in the database
+    :param label: label whose label to be changed
+    :return: True or False, depending on the query's success
+    """
+
+    db_connection = DB_Communication.connect_to_db()
+
+    sql_cursor = db_connection.cursor()
+
+    number_of_shares = DB_Communication.get_total_number_of_shares(sql_cursor)
+
+    if number_of_shares is not None:
+        label.config(text=number_of_shares)
+        return True
+    else:
+        messagebox.showerror("Query Error", "The query could not be performed successfully. "
+                                            "Please check the connection and the query code.")
+        return False
+
