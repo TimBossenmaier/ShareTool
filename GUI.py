@@ -29,9 +29,28 @@ class ShareToolGUI(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
+        # create container for the menu bar
+        menubar = tk.Menu(container)
+
+        # create the main menu with its entries
+        main_menu = tk.Menu(menubar, tearoff=0)
+        main_menu.add_command(label="Help",
+                              command=lambda: messagebox.showinfo(title='Stay tuned!',
+                                                                  message="Unfortunately not supported yet"))
+        # add optical seperator
+        main_menu.add_separator()
+
+        # add exit command
+        main_menu.add_command(label="Exit", command=quit)
+
+        menubar.add_cascade(label="Main", menu=main_menu)
+
+        # add menubar to frame
+        tk.Tk.config(self, menu=menubar)
+
         self.frames = {}
 
-        for each_frame in (StartPage, PageOne):
+        for each_frame in (WelcomePage, StartPage):
 
             frame = each_frame(container, self)
 
@@ -39,7 +58,7 @@ class ShareToolGUI(tk.Tk):
 
             frame.grid(row=0, column=0, sticky='nsew')
 
-        self.show_frame(StartPage)
+        self.show_frame(WelcomePage)
 
     def show_frame(self, cont):
 
@@ -47,7 +66,7 @@ class ShareToolGUI(tk.Tk):
         frame.tkraise()
 
 
-class StartPage(tk.Frame):
+class WelcomePage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -72,26 +91,23 @@ class StartPage(tk.Frame):
 
         # create button to proceed
         button_start_page = ttk.Button(self, text='Start',
-                                       command=lambda: messagebox.showinfo("Stay tuned!", "Not implemented yet"))
+                                       command=lambda: controller.show_frame(StartPage))
         button_start_page.place(x=480, y=420, anchor='center')
         button_start_page['state'] = "disabled"
 
         # check for database connection
         is_connection_successful = change_label_according_to_db_availability(label_connection_check)
 
+        # button is only active in case of a active db connection
         if is_connection_successful:
             button_start_page['state'] = "normal"
 
 
-class PageOne(tk.Frame):
+class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Page One!", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
 
-        button2 = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(StartPage))
-        button2.pack()
 
 
 def change_label_according_to_db_availability(label):
