@@ -33,17 +33,38 @@ class ShareToolGUI(tk.Tk):
         menubar = tk.Menu(container)
 
         # create the main menu with its entries
-        main_menu = tk.Menu(menubar, tearoff=0)
-        main_menu.add_command(label="Help",
+        menu_main = tk.Menu(menubar, tearoff=0)
+        menu_main.add_command(label="StartPage", command=lambda: self.show_frame(StartPage))
+        menu_main.add_command(label="Help",
                               command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                   message="Unfortunately not supported yet"))
         # add optical seperator
-        main_menu.add_separator()
+        menu_main.add_separator()
 
         # add exit command
-        main_menu.add_command(label="Exit", command=quit)
+        menu_main.add_command(label="Exit", command=quit)
 
-        menubar.add_cascade(label="Main", menu=main_menu)
+        menubar.add_cascade(label="Main", menu=menu_main)
+
+        # create menu for new entries
+        menu_new = tk.Menu(menubar, tearoff=0)
+        menu_new.add_command(label="entities",
+                             command=lambda: messagebox.showinfo(title='Stay tuned!',
+                                                                 message="Unfortunately not supported yet"))
+        menu_new.add_command(label="data",
+                             command=lambda: messagebox.showinfo(title='Stay tuned!',
+                                                                 message="Unfortunately not supported yet"))
+        menubar.add_cascade(label="New", menu=menu_new)
+
+        # create menu for updating entries
+        menu_update = tk.Menu(menubar, tearoff=0)
+        menu_update.add_command(label="entities",
+                                command=lambda: messagebox.showinfo(title='Stay tuned!',
+                                                                    message="Unfortunately not supported yet"))
+        menu_update.add_command(label="data",
+                                command=lambda: messagebox.showinfo(title='Stay tuned!',
+                                                                    message="Unfortunately not supported yet"))
+        menubar.add_cascade(label="Update", menu=menu_update)
 
         # add menubar to frame
         tk.Tk.config(self, menu=menubar)
@@ -107,7 +128,6 @@ class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
 
 
 def change_label_according_to_db_availability(label):
