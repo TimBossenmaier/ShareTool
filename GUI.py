@@ -34,7 +34,7 @@ class ShareToolGUI(tk.Tk):
 
         # create the main menu with its entries
         menu_main = tk.Menu(menubar, tearoff=0)
-        menu_main.add_command(label="StartPage", command=lambda: self.show_frame(StartPage))
+        menu_main.add_command(label="Status page", command=lambda: self.show_frame(StatusPage))
         menu_main.add_command(label="Help",
                               command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                   message="Unfortunately not supported yet"))
@@ -78,7 +78,7 @@ class ShareToolGUI(tk.Tk):
 
         self.frames = {}
 
-        for each_frame in (WelcomePage, StartPage):
+        for each_frame in (WelcomePage, StatusPage):
 
             frame = each_frame(container, self)
 
@@ -110,7 +110,7 @@ class WelcomePage(tk.Frame):
         canvas_image.place(x=480, y=10, anchor='center')
 
         # create welcome Label
-        label_heading = ttk.Label(self, text="Willkommen im Share Management Tool!", font=HEADING1_FONT)
+        label_heading = ttk.Label(self, text="Welcome to the Share Management Tool!", font=HEADING1_FONT)
         label_heading.place(x=480, y=350, anchor='center')
 
         # create label for connection check
@@ -119,7 +119,7 @@ class WelcomePage(tk.Frame):
 
         # create button to proceed
         button_start_page = ttk.Button(self, text='Start',
-                                       command=lambda: controller.show_frame(StartPage))
+                                       command=lambda: controller.show_frame(StatusPage))
         button_start_page.place(x=480, y=420, anchor='center')
         button_start_page['state'] = "disabled"
 
@@ -131,27 +131,56 @@ class WelcomePage(tk.Frame):
             button_start_page['state'] = "normal"
 
 
-class StartPage(tk.Frame):
+class StatusPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
         # create heading
-        label_heading = ttk.Label(self, text="Status des Share Management Tools", font=HEADING1_FONT)
+        label_heading = ttk.Label(self, text="Status of the Share Management Tool", font=HEADING1_FONT)
         label_heading.place(x=480, y=50, anchor='center')
 
         # create heading number of shares
-        label_heading_no_of_shares = ttk.Label(self, text="Anzahl der verwalteten Aktien", font=LARGE_FONT)
+        label_heading_no_of_shares = ttk.Label(self, text="Number of managed shares", font=LARGE_FONT)
         label_heading_no_of_shares.place(x=200, y=125, anchor='center')
 
         # create label for number of shares
         label_no_of_shares = ttk.Label(self, text="150", font=NORMAL_FONT)
         label_no_of_shares.place(x=200, y=150, anchor='center')
 
+        # update number of shares
         change_label_number_of_shares(label_no_of_shares)
 
+        # create heading number of shares
+        label_heading_no_of_shares_backlog = ttk.Label(self, text="Number of shares in backlog", font=LARGE_FONT)
+        label_heading_no_of_shares_backlog.place(x=200, y=425, anchor='center')
 
+        # create label for number of shares
+        label_no_of_shares_backlog = ttk.Label(self, text="-", font=NORMAL_FONT)
+        label_no_of_shares_backlog.place(x=200, y=450, anchor='center')
 
+        # TODO: Update Function
+
+        # create heading number of incomplete instances
+        label_heading_last_update = ttk.Label(self, text="Last automatic update", font=LARGE_FONT)
+        label_heading_last_update.place(x=700, y=125, anchor='center')
+
+        # create label for number of incomplete instances
+        label_last_update = ttk.Label(self, text="-", font=NORMAL_FONT)
+        label_last_update.place(x=700, y=150, anchor='center')
+
+        # TODO: Update Function
+
+        # create heading number of incomplete instances
+        label_heading_no_of_incomplete_instances = ttk.Label(self, text="Number of incomplete instances",
+                                                             font=LARGE_FONT)
+        label_heading_no_of_incomplete_instances.place(x=700, y=425, anchor='center')
+
+        # create label for number of incomplete instances
+        label_no_of_incomplete_instances = ttk.Label(self, text="-", font=NORMAL_FONT)
+        label_no_of_incomplete_instances.place(x=700, y=450, anchor='center')
+
+        # TODO: Update Function
 
 
 def change_label_according_to_db_availability(label):
@@ -193,4 +222,3 @@ def change_label_number_of_shares(label):
         messagebox.showerror("Query Error", "The query could not be performed successfully. "
                                             "Please check the connection and the query code.")
         return False
-
