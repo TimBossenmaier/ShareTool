@@ -63,22 +63,14 @@ class ShareToolGUI(tk.Tk):
 
         # create menu for new entries
         self.menu_new = tk.Menu(self.menubar, tearoff=0)
-        self.menu_new.add_command(label="Entities",
-                                  command=lambda: messagebox.showinfo(title='Stay tuned!',
-                                                                      message="Unfortunately not supported yet"))
-        self.menu_new.add_command(label="Data",
-                                  command=lambda: messagebox.showinfo(title='Stay tuned!',
-                                                                      message="Unfortunately not supported yet"))
+        self.menu_new.add_command(label="Entities", command=self.depends_on_db)
+        self.menu_new.add_command(label="Data", command=self.depends_on_db)
         self.menubar.add_cascade(label="New", menu=self.menu_new)
 
         # create menu for updating entries
         self.menu_update = tk.Menu(self.menubar, tearoff=0)
-        self.menu_update.add_command(label="Entities",
-                                     command=lambda: messagebox.showinfo(title='Stay tuned!',
-                                                                         message="Unfortunately not supported yet"))
-        self.menu_update.add_command(label="Data",
-                                     command=lambda: messagebox.showinfo(title='Stay tuned!',
-                                                                         message="Unfortunately not supported yet"))
+        self.menu_update.add_command(label="Entities", command=self.depends_on_db)
+        self.menu_update.add_command(label="Data", command=self.depends_on_db)
         self.menubar.add_cascade(label="Update", menu=self.menu_update)
 
         # add menubar to frame
@@ -159,6 +151,19 @@ class ShareToolGUI(tk.Tk):
         frame = page(self.container, self)
         self.frames[page] = frame
         frame.grid(row=0, column=0, sticky='nsew')
+
+     # TODO: has to be replaced stepwise
+    def depends_on_db(self):
+        """
+        ONLY FOR DEVELOPMENT
+        """
+        if self.db_connection is None:
+            messagebox.showinfo(title='Configure DB',
+                                message="Please ensure valid db connection before proceed")
+        else:
+            messagebox.showinfo(title='Stay tuned!',
+                                message="Unfortunately not supported yet")
+
 
 
 class BasicPage(tk.Frame):
