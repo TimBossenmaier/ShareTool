@@ -24,6 +24,8 @@ class ShareToolGUI(tk.Tk):
         tk.Tk.wm_title(self, "Share Management Tool")
         tk.Tk.iconbitmap(self, default='./data/img/ShareTool.ico')
 
+        self.db_connection = None
+
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
@@ -34,7 +36,7 @@ class ShareToolGUI(tk.Tk):
 
         # create the main menu with its entries
         menu_main = tk.Menu(menubar, tearoff=0)
-        menu_main.add_command(label="Status page", command=lambda: self.show_frame(StatusPage))
+        menu_main.add_command(label="Status page", command=lambda: self.menu_bar_open_status_page())
         menu_main.add_command(label="Help",
                               command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                   message="Unfortunately not supported yet"))
@@ -43,6 +45,11 @@ class ShareToolGUI(tk.Tk):
 
         # add option to check connectivity
         menu_main.add_command(label="Check Connection to DB",
+                              command=lambda: messagebox.showinfo(title='Stay tuned!',
+                                                                  message="Unfortunately not supported yet"))
+
+        # add option to customize db cofig
+        menu_main.add_command(label="Customize DB Config",
                               command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                   message="Unfortunately not supported yet"))
         # add optical seperator
@@ -78,7 +85,13 @@ class ShareToolGUI(tk.Tk):
 
         self.frames = {}
 
-        for each_frame in (WelcomePage, StatusPage):
+        self.frame_welcome_page = WelcomePage(container, self)
+
+        self.frames[WelcomePage] = self.frame_welcome_page
+
+        self.frame_welcome_page.grid(row=0, column=0, sticky='nsew')
+
+        for each_frame in (StatusPage):
 
             frame = each_frame(container, self)
 
@@ -91,7 +104,22 @@ class ShareToolGUI(tk.Tk):
     def show_frame(self, cont):
 
         frame = self.frames[cont]
+        if cont is not WelcomePage:
+            frame.update_frame(controller=self)
         frame.tkraise()
+
+    def get_db_connection(self):
+        return self.db_connection
+
+    def set_db_connection(self, con):
+        self.db_connection = con
+
+    def menu_bar_open_status_page(self):
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message="Please ensure first the database connection to be established")
+        else:
+            self.show_frame(StatusPage)
 
 
 class WelcomePage(tk.Frame):
@@ -124,11 +152,35 @@ class WelcomePage(tk.Frame):
         button_start_page['state'] = "disabled"
 
         # check for database connection
-        is_connection_successful = change_label_according_to_db_availability(label_connection_check)
+        is_connection_successful = self.change_label_according_to_db_availability(controller, label_connection_check)
 
         # button is only active in case of a active db connection
         if is_connection_successful:
             button_start_page['state'] = "normal"
+
+    def change_label_according_to_db_availability(self, controller, label):
+        """
+        Check the connection to the database, set the application's connection accordingly and
+        change the label's text in case of success
+        :param controller: reference to application
+        :param label: label whose label to be changed
+        :return: True or False, depending on accessibility
+        """
+
+        db_connection = DB_Communication.connect_to_db()
+
+        if ShareToolGUI.get_db_connection(controller) is None:
+            ShareToolGUI.set_db_connection(controller, db_connection)
+
+        if ShareToolGUI.get_db_connection(controller) is not None:
+
+            label.config(text="Connection to database successfully initiated!")
+            return True
+        else:
+            messagebox.showerror("Connection Error", "The connection to the database could not be established. "
+                                                     "Please check the configuration under Main -> Customize DB Config")
+            label.config(text="Please check the configuration under Main -> Customize DB Config")
+            return False
 
 
 class StatusPage(tk.Frame):
@@ -136,89 +188,81 @@ class StatusPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
+        self.db_connection = controller.get_db_connection()
+
         # create heading
-        label_heading = ttk.Label(self, text="Status of the Share Management Tool", font=HEADING1_FONT)
-        label_heading.place(x=480, y=50, anchor='center')
+        self.label_heading = ttk.Label(self, text="Status of the Share Management Tool", font=HEADING1_FONT)
+        self.label_heading.place(x=480, y=50, anchor='center')
 
         # create heading number of shares
-        label_heading_no_of_shares = ttk.Label(self, text="Number of managed shares", font=LARGE_FONT)
-        label_heading_no_of_shares.place(x=200, y=125, anchor='center')
+        self.label_heading_no_of_shares = ttk.Label(self, text="Number of managed shares", font=LARGE_FONT)
+        self.label_heading_no_of_shares.place(x=200, y=125, anchor='center')
 
         # create label for number of shares
-        label_no_of_shares = ttk.Label(self, text="150", font=NORMAL_FONT)
-        label_no_of_shares.place(x=200, y=150, anchor='center')
+        self.label_no_of_shares = ttk.Label(self, text="150", font=NORMAL_FONT)
+        self.label_no_of_shares.place(x=200, y=150, anchor='center')
 
+        # create heading number of shares
+        self.label_heading_no_of_shares_backlog = ttk.Label(self, text="Number of shares in backlog", font=LARGE_FONT)
+        self.label_heading_no_of_shares_backlog.place(x=200, y=425, anchor='center')
+
+        # create label for number of shares
+        self.label_no_of_shares_backlog = ttk.Label(self, text="-", font=NORMAL_FONT)
+        self.label_no_of_shares_backlog.place(x=200, y=450, anchor='center')
+
+        # TODO: Update Function
+
+        # create heading number of incomplete instances
+        self.label_heading_last_update = ttk.Label(self, text="Last automatic update", font=LARGE_FONT)
+        self.label_heading_last_update.place(x=700, y=125, anchor='center')
+
+        # create label for number of incomplete instances
+        self.label_last_update = ttk.Label(self, text="-", font=NORMAL_FONT)
+        self.label_last_update.place(x=700, y=150, anchor='center')
+
+        # TODO: Update Function
+
+        # create heading number of incomplete instances
+        self.label_heading_no_of_incomplete_instances = ttk.Label(self, text="Number of incomplete instances",
+                                                                  font=LARGE_FONT)
+        self.label_heading_no_of_incomplete_instances.place(x=700, y=425, anchor='center')
+
+        # create label for number of incomplete instances
+        self.label_no_of_incomplete_instances = ttk.Label(self, text="-", font=NORMAL_FONT)
+        self.label_no_of_incomplete_instances.place(x=700, y=450, anchor='center')
+
+        # TODO: Update Function
+
+    def change_label_number_of_shares(self, label):
+        """
+        Get the total number of shares that are currently in the database
+        :param label: label whose label to be changed
+        :return: True or False, depending on the query's success
+        """
+
+        db_connection = self.db_connection
+
+        if db_connection is not None:
+
+            sql_cursor = db_connection.cursor()
+
+            number_of_shares = DB_Communication.get_total_number_of_shares(sql_cursor)
+
+            if number_of_shares is not None:
+                label.config(text=number_of_shares)
+                return True
+        else:
+            messagebox.showerror("Query Error", "The query could not be performed successfully. "
+                                                "Please check the connection and the query code.")
+            return False
+
+    def update_frame(self, controller):
         # update number of shares
-        change_label_number_of_shares(label_no_of_shares)
+        # TODO: Remove if clause after development
+        self.db_connection = controller.get_db_connection()
 
-        # create heading number of shares
-        label_heading_no_of_shares_backlog = ttk.Label(self, text="Number of shares in backlog", font=LARGE_FONT)
-        label_heading_no_of_shares_backlog.place(x=200, y=425, anchor='center')
+        if self.db_connection is not None:
+            self.change_label_number_of_shares(self.label_no_of_shares)
+        else:
+            print("No DB")
 
-        # create label for number of shares
-        label_no_of_shares_backlog = ttk.Label(self, text="-", font=NORMAL_FONT)
-        label_no_of_shares_backlog.place(x=200, y=450, anchor='center')
-
-        # TODO: Update Function
-
-        # create heading number of incomplete instances
-        label_heading_last_update = ttk.Label(self, text="Last automatic update", font=LARGE_FONT)
-        label_heading_last_update.place(x=700, y=125, anchor='center')
-
-        # create label for number of incomplete instances
-        label_last_update = ttk.Label(self, text="-", font=NORMAL_FONT)
-        label_last_update.place(x=700, y=150, anchor='center')
-
-        # TODO: Update Function
-
-        # create heading number of incomplete instances
-        label_heading_no_of_incomplete_instances = ttk.Label(self, text="Number of incomplete instances",
-                                                             font=LARGE_FONT)
-        label_heading_no_of_incomplete_instances.place(x=700, y=425, anchor='center')
-
-        # create label for number of incomplete instances
-        label_no_of_incomplete_instances = ttk.Label(self, text="-", font=NORMAL_FONT)
-        label_no_of_incomplete_instances.place(x=700, y=450, anchor='center')
-
-        # TODO: Update Function
-
-
-def change_label_according_to_db_availability(label):
-    """
-    Check the connection to the database and change the label's text in case of success
-    :param label: label whose label to be changed
-    :return: True or False, depending on accessibility
-    """
-
-    db_connection = DB_Communication.connect_to_db()
-
-    if db_connection is not None:
-
-        label.config(text="Connection to database successfully initiated!")
-        return True
-    else:
-        messagebox.showerror("Connection Error", "The connection to the database could not be established. "
-                                                 "Please check the configuration of the database in db_config.json")
-        return False
-
-
-def change_label_number_of_shares(label):
-    """
-    Get the total number of shares that are currently in the database
-    :param label: label whose label to be changed
-    :return: True or False, depending on the query's success
-    """
-
-    db_connection = DB_Communication.connect_to_db()
-
-    sql_cursor = db_connection.cursor()
-
-    number_of_shares = DB_Communication.get_total_number_of_shares(sql_cursor)
-
-    if number_of_shares is not None:
-        label.config(text=number_of_shares)
-        return True
-    else:
-        messagebox.showerror("Query Error", "The query could not be performed successfully. "
-                                            "Please check the connection and the query code.")
-        return False
