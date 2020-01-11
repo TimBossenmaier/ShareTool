@@ -2,10 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import DB_Communication
-
 from PIL import ImageTk
 
-
+# Define some fonts
 HEADING1_FONT = ("Open Sans", 16, "bold")
 LARGE_FONT = ("Open Sans", 12)
 NORMAL_FONT = ("Open Sans", 11)
@@ -14,13 +13,15 @@ SMALL_FONT = ("Open Sans", 8)
 
 class ShareToolGUI(tk.Tk):
     """
-
+    Define the basic application.
+    Depending on user interaction, show different frames (defined as own classes)
     """
 
     def __init__(self, *args, **kwargs):
 
         tk.Tk.__init__(self, *args, **kwargs)
 
+        # set title and icon
         tk.Tk.wm_title(self, "Share Management Tool")
         tk.Tk.iconbitmap(self, default='./data/img/ShareTool.ico')
 
@@ -40,7 +41,7 @@ class ShareToolGUI(tk.Tk):
         self.menu_main.add_command(label="Help",
                                    command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                        message="Unfortunately not supported yet"))
-        # add optical seperator
+        # add optical separator
         self.menu_main.add_separator()
 
         # add option to check connectivity
@@ -52,7 +53,7 @@ class ShareToolGUI(tk.Tk):
         self.menu_main.add_command(label="Customize DB Config",
                                    command=lambda: messagebox.showinfo(title='Stay tuned!',
                                                                        message="Unfortunately not supported yet"))
-        # add optical seperator
+        # add optical separator
         self.menu_main.add_separator()
 
         # add exit command
@@ -83,28 +84,44 @@ class ShareToolGUI(tk.Tk):
         # add menubar to frame
         tk.Tk.config(self, menu=self.menubar)
 
+        # define dictionary for created frames to allow accessing them
         self.frames = {}
 
+        # create one instance of the welcome page and show it
         self.frame_welcome_page = WelcomePage(self.container, self)
-
         self.frames[WelcomePage] = self.frame_welcome_page
-
         self.frame_welcome_page.grid(row=0, column=0, sticky='nsew')
-
         self.show_frame(WelcomePage)
 
     def show_frame(self, page):
+        """
+        Show the given page to the user
+        :param page: class of page to be shown (page itself has to be in self.frames)
+        :return: None
+        """
+        # get instance of page by class
         frame = self.frames[page]
-        if page is not WelcomePage and self.db_connection is not None:
-            frame.update_frame(controller=self)
+
+        # update frame and show it to the user
+        frame.update_frame()
         frame.tkraise()
 
     def show_frame_with_delete(self, page, old_page):
+        """
+        same as above, additionally delete the old_page
+        :param page: class of page to be shown (page itself has to be in self.frames)
+        :param old_page: class of page to be deleted (page itself has to be in self.frames)
+        :return: None
+        """
 
+        # get instance of page by class
         frame = self.frames[page]
-        if page is not WelcomePage:
-            frame.update_frame()
+
+        # update frame and show it to the user
+        frame.update_frame()
         frame.tkraise()
+
+        # delete the old page
         del(self.frames[old_page])
 
     def get_db_connection(self):
@@ -114,19 +131,40 @@ class ShareToolGUI(tk.Tk):
         self.db_connection = con
 
     def menu_bar_open_status_page(self):
+        """
+        Display status page in case it exists
+        :return: None
+        """
+
+        # db_connection is prerequisite for this page
         if self.db_connection is None:
             messagebox.showinfo(title='Not possible yet!',
-                                message="Please ensure first the database connection to be established")
-        else:
+                                message="Please first ensure the database connection to be established")
+
+        # check whether status page exists already
+        elif StatusPage in self.frames.keys():
             self.show_frame(StatusPage)
 
+        # create status page if not
+        else:
+            self.create_page(StatusPage)
+            self.show_frame_with_delete(StatusPage, WelcomePage)
+
     def create_page(self, page):
+        """
+        Create a page and add it to self.frames
+        :param page: class of page to be created
+        :return: None
+        """
         frame = page(self.container, self)
         self.frames[page] = frame
         frame.grid(row=0, column=0, sticky='nsew')
 
 
-class WelcomePage(tk.Frame):
+class BasicPage(tk.Frame):
+    """
+    Super class for all pages
+    """
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -135,7 +173,30 @@ class WelcomePage(tk.Frame):
         self.controller = controller
         self.parent = parent
 
-        self.db_connection = controller.get_db_connection
+        self.db_connection = controller.db_connection
+
+    def get_controller(self):
+        return self.controller
+
+    def get_parent(self):
+        return self.parent
+
+    def get_db_connection(self):
+        return self.db_connection
+
+    def set_db_connection(self, con):
+        self.db_connection = con
+
+    def update_frame(self):
+        pass
+
+
+class WelcomePage(BasicPage):
+
+    def __init__(self, parent, controller):
+
+        # call constructor of superclass
+        super().__init__(parent, controller)
 
         # create canvas as container for the image
         self.canvas_image = tk.Canvas(self, width=500, height=700)
@@ -169,8 +230,6 @@ class WelcomePage(tk.Frame):
         """
         Check the connection to the database, set the application's connection accordingly and
         change the label's text in case of success
-        :param controller: reference to application
-        :param label: label whose label to be changed
         :return: True or False, depending on accessibility
         """
 
@@ -190,19 +249,20 @@ class WelcomePage(tk.Frame):
             return False
 
     def command_start_button(self):
+        """
+        Create status page and delete Welcome Page
+        :return: None
+        """
         self.controller.create_page(StatusPage)
-        self.controller.show_frame_with_delete(StatusPage,WelcomePage)
+        self.controller.show_frame_with_delete(StatusPage, WelcomePage)
 
 
-class StatusPage(tk.Frame):
+class StatusPage(BasicPage):
 
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
 
-        self.controller = controller
-        self.parent = parent
-
-        self.db_connection = controller.get_db_connection()
+        # call constructor of superclass
+        super().__init__(parent, controller)
 
         # create heading
         self.label_heading = ttk.Label(self, text="Status of the Share Management Tool", font=HEADING1_FONT)
@@ -250,7 +310,6 @@ class StatusPage(tk.Frame):
     def change_label_number_of_shares(self):
         """
         Get the total number of shares that are currently in the database
-        :param label: label whose label to be changed
         :return: True or False, depending on the query's success
         """
 
@@ -271,11 +330,10 @@ class StatusPage(tk.Frame):
             return False
 
     def update_frame(self):
-        # update number of shares
-        # TODO: Remove if clause after development
-        self.db_connection = self.controller.get_db_connection()
+        """
+        Update all instaces using values from the db
+        :return: None
+        """
 
-        if self.db_connection is not None:
-            self.change_label_number_of_shares()
-        else:
-            print("No DB")
+        # update number of shares
+        self.change_label_number_of_shares()
