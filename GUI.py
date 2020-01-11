@@ -165,7 +165,6 @@ class ShareToolGUI(tk.Tk):
                                 message="Unfortunately not supported yet")
 
 
-
 class BasicPage(tk.Frame):
     """
     Super class for all pages
@@ -281,14 +280,22 @@ class StatusPage(BasicPage):
         self.label_no_of_shares = ttk.Label(self, text="150", font=NORMAL_FONT)
         self.label_no_of_shares.place(x=200, y=150, anchor='center')
 
-        # create heading number of shares
+        # create heading number of shares in backlog
         self.label_heading_no_of_shares_backlog = ttk.Label(self, text="Number of shares in backlog", font=LARGE_FONT)
-        self.label_heading_no_of_shares_backlog.place(x=200, y=425, anchor='center')
+        self.label_heading_no_of_shares_backlog.place(x=200, y=275, anchor='center')
 
-        # create label for number of shares
+        # create label for number of shares in backlog
         self.label_no_of_shares_backlog = ttk.Label(self, text="-", font=NORMAL_FONT)
-        self.label_no_of_shares_backlog.place(x=200, y=450, anchor='center')
+        self.label_no_of_shares_backlog.place(x=200, y=300, anchor='center')
+        # TODO: integrate in update Function
 
+        # create heading for number of buy alarms
+        self.label_heading_no_of_buy_alarms = ttk.Label(self, text="Number of buy alarms", font=LARGE_FONT)
+        self.label_heading_no_of_buy_alarms.place(x=200, y=425, anchor='center')
+
+        # create label for number of shares in backlog
+        self.label_no_of_buy_alarms = ttk.Label(self, text="-", font=NORMAL_FONT)
+        self.label_no_of_buy_alarms.place(x=200, y=450, anchor='center')
         # TODO: integrate in update Function
 
         # create heading number of incomplete instances
@@ -298,19 +305,27 @@ class StatusPage(BasicPage):
         # create label for number of incomplete instances
         self.label_last_update = ttk.Label(self, text="-", font=NORMAL_FONT)
         self.label_last_update.place(x=700, y=150, anchor='center')
-
         # TODO: integrate in update Function
 
         # create heading number of incomplete instances
         self.label_heading_no_of_incomplete_instances = ttk.Label(self, text="Number of incomplete instances",
                                                                   font=LARGE_FONT)
         self.label_heading_no_of_incomplete_instances.place(x=700, y=425, anchor='center')
+        # TODO: integrate in update Function
 
         # create label for number of incomplete instances
         self.label_no_of_incomplete_instances = ttk.Label(self, text="-", font=NORMAL_FONT)
         self.label_no_of_incomplete_instances.place(x=700, y=450, anchor='center')
-
         # TODO: integrate in update Function
+
+    def update_frame(self):
+        """
+        Update all instaces using values from the db
+        :return: None
+        """
+
+        # update number of shares
+        self.change_label_number_of_shares()
 
     def change_label_number_of_shares(self):
         """
@@ -333,12 +348,3 @@ class StatusPage(BasicPage):
             messagebox.showerror("Query Error", "The query could not be performed successfully. "
                                                 "Please check the connection and the query code.")
             return False
-
-    def update_frame(self):
-        """
-        Update all instaces using values from the db
-        :return: None
-        """
-
-        # update number of shares
-        self.change_label_number_of_shares()
