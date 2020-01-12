@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import messagebox
 import DB_Communication
 from PIL import ImageTk
+import json
 
 # Define some fonts
 HEADING1_FONT = ("Open Sans", 16, "bold")
@@ -44,15 +45,9 @@ class ShareToolGUI(tk.Tk):
         # add optical separator
         self.menu_main.add_separator()
 
-        # add option to check connectivity
-        self.menu_main.add_command(label="Check Connection to DB",
-                                   command=lambda: messagebox.showinfo(title='Stay tuned!',
-                                                                       message="Unfortunately not supported yet"))
-
         # add option to customize db cofig
         self.menu_main.add_command(label="Customize DB Config",
-                                   command=lambda: messagebox.showinfo(title='Stay tuned!',
-                                                                       message="Unfortunately not supported yet"))
+                                   command=self.menu_bar_open_custom_db)
         # add optical separator
         self.menu_main.add_separator()
 
@@ -108,7 +103,7 @@ class ShareToolGUI(tk.Tk):
 
         # get instance of page by class
         frame = self.frames[page]
-
+        
         # update frame and show it to the user
         frame.update_frame()
         frame.tkraise()
@@ -152,7 +147,9 @@ class ShareToolGUI(tk.Tk):
         self.frames[page] = frame
         frame.grid(row=0, column=0, sticky='nsew')
 
-     # TODO: has to be replaced stepwise
+
+    # TODO: has to be replaced stepwise
+
     def depends_on_db(self):
         """
         ONLY FOR DEVELOPMENT
@@ -163,6 +160,21 @@ class ShareToolGUI(tk.Tk):
         else:
             messagebox.showinfo(title='Stay tuned!',
                                 message="Unfortunately not supported yet")
+
+
+    def menu_bar_open_custom_db(self):
+        """
+        Opens a frame allowing the user to customize the DB configuration
+        Creates page as well if required
+        :return: None
+        """
+
+        if ConfigDBPage in self.frames.keys():
+            self.show_frame(ConfigDBPage)
+        else:
+            self.create_page(ConfigDBPage)
+            self.show_frame(ConfigDBPage)
+
 
 
 class BasicPage(tk.Frame):
@@ -223,12 +235,6 @@ class WelcomePage(BasicPage):
         self.button_start_page.place(x=480, y=420, anchor='center')
         self.button_start_page['state'] = "disabled"
 
-        # check for database connection
-        self.is_connection_successful = self.change_label_according_to_db_availability()
-
-        # button is only active in case of a active db connection
-        if self.is_connection_successful:
-            self.button_start_page['state'] = "normal"
 
     def change_label_according_to_db_availability(self):
         """
@@ -237,12 +243,40 @@ class WelcomePage(BasicPage):
         :return: True or False, depending on accessibility
         """
 
-        self.db_connection = DB_Communication.connect_to_db()
+        self.set_db_connection(DB_Communication.connect_to_db())
 
         if self.controller.get_db_connection() is None:
             self.controller.set_db_connection(self.db_connection)
 
         if self.controller.get_db_connection() is not None:
+
+            self.label_connection_check.config(text="Connection to database successfully initiated!")
+            return True
+        else:
+            messagebox.showerror("Connection Error", "The connection to the database could not be established. "
+                                                     "Please check the configuration under Main -> Customize DB Config")
+            self.label_connection_check.config(text="Please check the configuration under Main -> Customize DB Config")
+            return False
+
+    def command_start_button(self):
+        """
+        Create status page and delete Welcome Page
+        :return: None
+        """
+        self.controller.create_page(StatusPage)
+        self.controller.show_frame_with_delete(StatusPage, WelcomePage)
+
+    def update_frame(self):
+        """
+        Update the frame
+        :return: None
+        """
+
+        is_connection_successful = self.change_label_according_to_db_availability()
+
+        # button is only active in case of a active db connection
+        if is_connection_successful:
+            self.button_start_page['state'] = "normal"
 
             self.label_connection_check.config(text="Connection to database successfully initiated!")
             return True
@@ -348,3 +382,125 @@ class StatusPage(BasicPage):
             messagebox.showerror("Query Error", "The query could not be performed successfully. "
                                                 "Please check the connection and the query code.")
             return False
+
+
+class ConfigDBPage (BasicPage):
+    """
+    Page allows user to see the current values of the db configuration and change them if required
+    """
+
+    def __init__(self, parent, controller):
+
+        # call constructor of superclass
+        super().__init__(parent, controller)
+
+        # create heading
+        self.label_heading = ttk.Label(self, text="Customize DB Configuration", font=HEADING1_FONT)
+        self.label_heading.place(x=480, y=50, anchor='center')
+
+        # create label for db name
+        self.label_db_name = ttk.Label(self, text="Database name", font=NORMAL_FONT)
+        self.label_db_name.place(x=100, y=150, anchor='center')
+
+        # create input field for db name
+        self.entry_db_name = ttk.Entry(self)
+        self.entry_db_name.place(x=300, y=150, anchor='center')
+
+        # create label for host name
+        self.label_hostname = ttk.Label(self, text="Hostname", font=NORMAL_FONT)
+        self.label_hostname.place(x=100, y=250, anchor='center')
+
+        # create input field for host name
+        self.entry_hostname = ttk.Entry(self)
+        self.entry_hostname.place(x=300, y=250, anchor='center')
+
+        # create label for user name
+        self.label_user_name = ttk.Label(self, text="User name", font=NORMAL_FONT)
+        self.label_user_name.place(x=550, y=150, anchor='center')
+
+        # create input field for user name
+        self.entry_user_name = ttk.Entry(self)
+        self.entry_user_name.place(x=750, y=150, anchor='center')
+
+        # create label for password
+        self.label_pw = ttk.Label(self, text="Password", font=NORMAL_FONT)
+        self.label_pw.place(x=550, y=250, anchor='center')
+
+        # create input field for user name
+        self.entry_pw = ttk.Entry(self, show='*')
+        self.entry_pw.place(x=750, y=250, anchor='center')
+
+        # create button for connection check
+        self.button_connection_check = ttk.Button(self, text="Connection Check", command=self.check_connection)
+        self.button_connection_check.place(x=400, y=350, anchor='center')
+
+        # create button for save configuration
+        self.button_save_connection = ttk.Button(self, text="Save Configuration", command=self.save_config_to_file)
+        self.button_save_connection.place(x=550, y=350, anchor='center')
+
+        # create button for back to status page
+        self.button_go_to_welcome_page = ttk.Button(self, text="Go Back to Welcome Page",
+                                                    command=lambda: self.get_controller()
+                                                    .show_frame_with_delete(WelcomePage, ConfigDBPage))
+        self.button_go_to_welcome_page.place(x=475, y=425, anchor='center')
+
+    def update_frame(self):
+        """
+        Update the frame
+        :return: None
+        """
+
+        # read the cofig JSON and load it as JSON
+        with open('./data/db_config.json', encoding='utf-8') as F:
+            dict_db_params = json.load(F)
+        F.close()
+
+        # display values from config file in entries
+        self.entry_db_name.insert(tk.END, dict_db_params["db_name"])
+        self.entry_hostname.insert(tk.END, dict_db_params["host"])
+        self.entry_user_name.insert(tk.END, dict_db_params["user"])
+        self.entry_pw.insert(tk.END, dict_db_params["password"])
+
+    def save_config_to_file(self):
+        """
+        save the current configuration specified in the UI to the config file
+        :return: None
+        """
+
+        # get all connection parameters
+        user_name = self.entry_user_name.get()
+        password = self.entry_pw.get()
+        hostname = self.entry_hostname.get()
+        db_name = self.entry_db_name.get()
+
+        # create a JSON string
+        db_config = '{"db_name": "' + db_name + '", ' \
+                    '"user" : "' + user_name + '", ' \
+                    '"host" : "' + hostname + '", ' \
+                    '"password": "' + password + '"}'
+
+        # write the JSON to the config file
+        with open('./data/db_config.json', 'w', encoding='utf-8') as F:
+            F.write(str(db_config))
+        F.close()
+
+    def check_connection(self):
+        """
+        check whether the currently specified configuration gives access to the database
+        and give visual feedback to the user.
+        :return: None
+        """
+
+        db_connection = DB_Communication.connect_to_db_with_params(db_name=self.entry_db_name.get(),
+                                                                   host=self.entry_hostname.get(),
+                                                                   user=self.entry_user_name.get(),
+                                                                   password=self.entry_pw.get())
+
+        if db_connection is None:
+            messagebox.showerror(title="No Connection",
+                                 message="It's not possible to get a connection to the database"
+                                         " with the chosen parameters. Please try again!")
+        else:
+            messagebox.showinfo(title="Connection initialized",
+                                message="Connection to database is successfully initialized. \n"
+                                        "You can now navigate back to the Welcome Page and start the application.")
