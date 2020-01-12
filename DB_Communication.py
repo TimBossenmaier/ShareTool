@@ -43,7 +43,7 @@ def connect_to_db():
 
     dict_db_params = None
 
-    #read the cofig JSON and load it as JSON
+    # read the cofig JSON and load it as JSON
     with open('./data/db_config.json', encoding='utf-8') as F:
         dict_db_params = json.load(F)
 
@@ -56,6 +56,27 @@ def connect_to_db():
     except:
         return None
 
+
+def connect_to_db_with_params(db_name, host, user, password):
+    """
+    Same as connect_to_db() but uses given parameters instead of ththe config file
+    :param db_name: name of database
+    :param host: name of host
+    :param user: name of user
+    :param password: password
+    :return: in case of a successful connection, the connection to the database otherwise None
+    """
+
+    try:
+
+        conn = psycopg2.connect("dbname='" + db_name + "' user='" + user + "' host='"
+                                + host + "' password='" + password + "'")
+
+        return conn
+    except:
+        return None
+
+
 def get_db_name():
     """
     :return: name of the currently used db
@@ -65,6 +86,7 @@ def get_db_name():
         dict_db_params = json.load(F)
 
     return dict_db_params["db_name"]
+
 
 def get_column_names_from_db_table(sql_cursor, table_name):
     """
@@ -91,6 +113,7 @@ def get_column_names_from_db_table(sql_cursor, table_name):
         column_names.append(each_name[0])
 
     return column_names
+
 
 def create_insert_into_statement_for_df(df, table_name):
 
@@ -121,3 +144,14 @@ def create_insert_into_statement_for_df(df, table_name):
     query_string += " VALUES(" + "%s, " * (df.shape[1] - 1) + "%s)"
 
     return query_string
+
+
+def get_total_number_of_shares(sql_cursor):
+
+    sql_query = open('./data/sql/get_total_number_of_shares.sql','r').read()
+
+    sql_cursor.execute(sql_query)
+
+    number_of_shares = sql_cursor.fetchall()[0][0]
+
+    return number_of_shares
