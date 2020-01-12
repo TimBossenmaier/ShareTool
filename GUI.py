@@ -103,7 +103,7 @@ class ShareToolGUI(tk.Tk):
 
         # get instance of page by class
         frame = self.frames[page]
-
+        
         # update frame and show it to the user
         frame.update_frame()
         frame.tkraise()
@@ -147,7 +147,9 @@ class ShareToolGUI(tk.Tk):
         self.frames[page] = frame
         frame.grid(row=0, column=0, sticky='nsew')
 
+
     # TODO: has to be replaced stepwise
+
     def depends_on_db(self):
         """
         ONLY FOR DEVELOPMENT
@@ -158,6 +160,7 @@ class ShareToolGUI(tk.Tk):
         else:
             messagebox.showinfo(title='Stay tuned!',
                                 message="Unfortunately not supported yet")
+
 
     def menu_bar_open_custom_db(self):
         """
@@ -171,6 +174,7 @@ class ShareToolGUI(tk.Tk):
         else:
             self.create_page(ConfigDBPage)
             self.show_frame(ConfigDBPage)
+
 
 
 class BasicPage(tk.Frame):
@@ -231,6 +235,7 @@ class WelcomePage(BasicPage):
         self.button_start_page.place(x=480, y=420, anchor='center')
         self.button_start_page['state'] = "disabled"
 
+
     def change_label_according_to_db_availability(self):
         """
         Check the connection to the database, set the application's connection accordingly and
@@ -272,6 +277,22 @@ class WelcomePage(BasicPage):
         # button is only active in case of a active db connection
         if is_connection_successful:
             self.button_start_page['state'] = "normal"
+
+            self.label_connection_check.config(text="Connection to database successfully initiated!")
+            return True
+        else:
+            messagebox.showerror("Connection Error", "The connection to the database could not be established. "
+                                                     "Please check the configuration under Main -> Customize DB Config")
+            self.label_connection_check.config(text="Please check the configuration under Main -> Customize DB Config")
+            return False
+
+    def command_start_button(self):
+        """
+        Create status page and delete Welcome Page
+        :return: None
+        """
+        self.controller.create_page(StatusPage)
+        self.controller.show_frame_with_delete(StatusPage, WelcomePage)
 
 
 class StatusPage(BasicPage):
