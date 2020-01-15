@@ -159,6 +159,7 @@ def get_total_number_of_shares(sql_cursor):
 
 
 def get_all_sectors(sql_cursor):
+    # TODO: get all zu einer Funktion zusammenfassen
 
     sql_query = 'SELECT * FROM param.sectors ORDER BY sector_name ASC'
 
@@ -175,6 +176,7 @@ def get_all_sectors(sql_cursor):
 
 
 def get_all_countries(sql_cursor):
+    # TODO: get_all_* zu einer Funktion zusammenfassen
 
     sql_query = 'SELECT "ID", country_name FROM param.countries ORDER BY country_name ASC'
 
@@ -188,6 +190,41 @@ def get_all_countries(sql_cursor):
         df_countries = df_countries.append({'ID': key, 'country_name': value}, ignore_index=True)
 
     return df_countries
+
+
+def get_all_categories(sql_cursor):
+    # TODO: get_all_* zu einer Funktion zusammenfassen
+
+    sql_query = 'SELECT "ID", category_name FROM param.categories ORDER BY category_name ASC'
+
+    sql_cursor.execute(sql_query)
+
+    df_categories = pd.DataFrame(columns=['ID', 'category_name'])
+
+    for each_line in sql_cursor.fetchall():
+
+        key, value = each_line
+
+        df_categories = df_categories.append({'ID': key,'category_name': value}, ignore_index=True)
+
+    return df_categories
+
+def get_all_currencies(sql_cursor):
+    # TODO: get_all_* zu einer Funktion zusammenfassen
+
+    sql_query = 'SELECT "ID", currency_name FROM param.currencies ORDER BY currency_name ASC'
+
+    sql_cursor.execute(sql_query)
+
+    df_currencies = pd.DataFrame(columns=['ID', 'currency_name'])
+
+    for each_line in sql_cursor.fetchall():
+
+        key, value = each_line
+
+        df_currencies = df_currencies.append({'ID': key, 'currency_name': value}, ignore_index=True)
+
+    return df_currencies
 
 
 def create_insert_into_statement(table_name, column_names, returning=False):
@@ -248,6 +285,17 @@ except psycopg2.errors.UniqueViolation:
     print("Hallo")
     
 """
+
+def insert_share(db_connection, values):
+
+    sql_cursor = db_connection.cursor()
+    column_names =  get_column_names_from_db_table(sql_cursor, "shares")
+    column_names.remove("ID")
+    query = create_insert_into_statement("shares", column_names)
+    sql_cursor.execute(query, (values["company_id"], values["isin"], values["category_id"],
+                               values["comment"], values["currency_id"]))
+    db_connection.commit()
+
 
 
 

@@ -124,6 +124,7 @@ class ShareToolGUI(tk.Tk):
         :return: None
         """
         frame = page(self.container, self)
+        frame.update_frame()
         self.frames[page] = frame
         frame.grid(row=0, column=0, sticky='nsew')
 
@@ -522,6 +523,12 @@ class CreateEntitiesPage (BasicPage):
         # data frame of countries
         self.df_countries = pd.DataFrame(columns=['ID', 'country_name'])
 
+        # data frame of categories
+        self.df_categories = pd.DataFrame(columns=['ID', 'category_name'])
+
+        # data frame of currencies
+        self.df_currencies = pd.DataFrame(columns=['ID', 'currency_name'])
+
         # id of the created company (referenced from shares)
         self.new_company_id = None
 
@@ -561,7 +568,53 @@ class CreateEntitiesPage (BasicPage):
         self.button_new_company = ttk.Button(self, text="Create company in DB", command=self.create_new_company_in_db)
         self.button_new_company.place(x=200, y=250, anchor='center')
 
-    def update_frame(self):
+        # create heading for new share
+        self.label_heading_new_share = ttk.Label(self, text="New Share", font=LARGE_FONT)
+        self.label_heading_new_share.place(x=100, y=350, anchor='center')
+
+        # create label for isin
+        self.label_isin = ttk.Label(self, text="ISIN", font=NORMAL_FONT)
+        self.label_isin.place(x=145, y=400, anchor='center')
+
+        # create entry for isin
+        self.entry_isin = ttk.Entry(self)
+        self.entry_isin["state"] = "disabled"  # only possible after creation of a company
+        self.entry_isin.place(x=250, y=400, anchor='center')
+
+        # create label for category
+        self.label_category = ttk.Label(self, text="Category", font=NORMAL_FONT)
+        self.label_category.place(x=375, y=400, anchor='center')
+
+        # create combobox for category
+        self.combobox_category = ttk.Combobox(self, width=15)
+        self.combobox_category["state"] = "disabled"  # only possible after creation of a company
+        self.combobox_category.place(x=475, y=400, anchor='center')
+
+        # create label for currency
+        self.label_currency = ttk.Label(self, text='Currency', font=NORMAL_FONT)
+        self.label_currency.place(x=625, y=400, anchor='center')
+
+        # create combobox for currency
+        self.combobox_currency = ttk.Combobox(self, width=25)
+        self.combobox_currency["state"] = "disabled"  # only possible after creation of a company
+        self.combobox_currency.place(x=775, y=400, anchor='center')
+
+        # create button for adding a comment
+        # TODO: add dialog to insert comment to share
+        self.button_add_comment = ttk.Button(self, text="Add comment")
+        self.button_add_comment["state"] = "disabled"  # only possible after creation of a company
+        self.button_add_comment.place(x=200, y=450, anchor='center')
+
+        # create button for inserting share into db
+        self.button_new_share = ttk.Button(self, text="Create share in DB", command=self.create_new_share_in_db)
+        self.button_new_share["state"] = "disabled"  # only possible after creation of a company
+        self.button_new_share.place(x=200, y=500, anchor='center')
+
+    def update_frame(self, shares_disabled=True):
+        """
+
+        :return:
+        """
 
         # update sector combobox
         self.df_sectors = DB_Communication.get_all_sectors(self.db_connection.cursor())
@@ -572,6 +625,38 @@ class CreateEntitiesPage (BasicPage):
         self.df_countries = DB_Communication.get_all_countries(self.db_connection.cursor())
         self.combobox_country.config(values=list(self.df_countries.country_name))
         self.combobox_country.current(0)
+
+        # clear company name input
+        self.entry_company_name.delete(0, tk.END)
+
+        # update category combobox
+        self.df_categories = DB_Communication.get_all_categories(self.db_connection.cursor())
+        self.combobox_category.config(values=list(self.df_categories.category_name))
+        self.combobox_category.current(1) # value is most common
+
+        # update currency combobox
+        self.df_currencies = DB_Communication.get_all_currencies(self.db_connection.cursor())
+        self.combobox_currency.config(values=list(self.df_currencies.currency_name))
+        self.combobox_currency.current(0)
+
+        # clear isin input
+        self.entry_isin.delete(0, tk.END)
+        # TODO: funktioniert nicht
+        if shares_disabled:
+            self.entry_isin["state"] = "Disabled"
+            self.combobox_category["state"] = "Disabled"
+            self.combobox_currency["state"] = "Disabled"
+            self.button_add_comment["state"] = "Disabled"
+            self.button_new_share["state"] = "Disabled"
+        else:
+            self.entry_isin["state"] = "Normal"
+            self.combobox_category["state"] = "Normal"
+            self.combobox_currency["state"] = "Normal"
+            self.button_add_comment["state"] = "Normal"
+            self.button_new_share["state"] = "Normal"
+
+
+
 
     def create_new_company_in_db(self):
         index_country_selected = self.combobox_country.current()
@@ -585,3 +670,28 @@ class CreateEntitiesPage (BasicPage):
                                                                   company_name,
                                                                   self.df_countries.ID[index_country_selected],
                                                                   self.df_sectors.ID[index_sector_selected])
+        self.update_frame(shares_disabled=False)
+
+    def create_new_share_in_db(self):
+        isin = self.entry_isin.get()
+        index_category = self.combobox_category.current()
+        index_currency = self.combobox_currency.current()
+        # TODO: integrate comment
+        comment = ""
+
+        dict_share_values = {"isin": isin,
+                             "category_id": self.df_categories.ID[index_category],
+                             "currency_id": self.df_currencies.ID[index_currency],
+                             "comment": comment,
+                             "company_id": self.new_company_id}
+
+        # TODO: Integrate ISIN VALIDATOR
+        if isin == "":
+            messagebox.showinfo("Missing ISIN", "Please insert an ISIN!")
+        else:
+            DB_Communication.insert_share(self.db_connection, dict_share_values)
+
+        self.update_frame(shares_disabled=True)
+
+
+        # TODO: erfolgsmeldung
