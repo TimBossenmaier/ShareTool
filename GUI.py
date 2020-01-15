@@ -1,9 +1,9 @@
 import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 import DB_Communication
 from PIL import ImageTk
 import json
+import pandas as pd
 
 # Define some fonts
 HEADING1_FONT = ("Open Sans", 16, "bold")
@@ -58,7 +58,7 @@ class ShareToolGUI(tk.Tk):
 
         # create menu for new entries
         self.menu_new = tk.Menu(self.menubar, tearoff=0)
-        self.menu_new.add_command(label="Entities", command=self.depends_on_db)
+        self.menu_new.add_command(label="Entities", command=self.menu_bar_open_create_entities)
         self.menu_new.add_command(label="Data", command=self.depends_on_db)
         self.menubar.add_cascade(label="New", menu=self.menu_new)
 
@@ -103,7 +103,7 @@ class ShareToolGUI(tk.Tk):
 
         # get instance of page by class
         frame = self.frames[page]
-        
+
         # update frame and show it to the user
         frame.update_frame()
         frame.tkraise()
@@ -116,6 +116,28 @@ class ShareToolGUI(tk.Tk):
 
     def set_db_connection(self, con):
         self.db_connection = con
+
+    def create_page(self, page):
+        """
+        Create a page and add it to self.frames
+        :param page: class of page to be created
+        :return: None
+        """
+        frame = page(self.container, self)
+        self.frames[page] = frame
+        frame.grid(row=0, column=0, sticky='nsew')
+
+    # TODO: has to be replaced stepwise
+    def depends_on_db(self):
+        """
+        ONLY FOR DEVELOPMENT
+        """
+        if self.db_connection is None:
+            messagebox.showinfo(title='Configure DB',
+                                message="Please ensure valid db connection before proceed")
+        else:
+            messagebox.showinfo(title='Stay tuned!',
+                                message="Unfortunately not supported yet")
 
     def menu_bar_open_status_page(self):
         """
@@ -137,31 +159,6 @@ class ShareToolGUI(tk.Tk):
             self.create_page(StatusPage)
             self.show_frame_with_delete(StatusPage, WelcomePage)
 
-    def create_page(self, page):
-        """
-        Create a page and add it to self.frames
-        :param page: class of page to be created
-        :return: None
-        """
-        frame = page(self.container, self)
-        self.frames[page] = frame
-        frame.grid(row=0, column=0, sticky='nsew')
-
-
-    # TODO: has to be replaced stepwise
-
-    def depends_on_db(self):
-        """
-        ONLY FOR DEVELOPMENT
-        """
-        if self.db_connection is None:
-            messagebox.showinfo(title='Configure DB',
-                                message="Please ensure valid db connection before proceed")
-        else:
-            messagebox.showinfo(title='Stay tuned!',
-                                message="Unfortunately not supported yet")
-
-
     def menu_bar_open_custom_db(self):
         """
         Opens a frame allowing the user to customize the DB configuration
@@ -175,6 +172,26 @@ class ShareToolGUI(tk.Tk):
             self.create_page(ConfigDBPage)
             self.show_frame(ConfigDBPage)
 
+    def menu_bar_open_create_entities(self):
+        """
+        Opens a frame allowing the user to create new entities
+        Creates page as well if required
+        :return: None
+        """
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message="Please first ensure the database connection to be established")
+
+        # check whether CreateEntitiesPage exists already
+        elif CreateEntitiesPage in self.frames.keys():
+            self.show_frame(CreateEntitiesPage)
+
+        # create CreateEntitiesPage if not
+        else:
+            self.create_page(CreateEntitiesPage)
+            self.show_frame(CreateEntitiesPage)
 
 
 class BasicPage(tk.Frame):
@@ -235,7 +252,6 @@ class WelcomePage(BasicPage):
         self.button_start_page.place(x=480, y=420, anchor='center')
         self.button_start_page['state'] = "disabled"
 
-
     def change_label_according_to_db_availability(self):
         """
         Check the connection to the database, set the application's connection accordingly and
@@ -277,22 +293,6 @@ class WelcomePage(BasicPage):
         # button is only active in case of a active db connection
         if is_connection_successful:
             self.button_start_page['state'] = "normal"
-
-            self.label_connection_check.config(text="Connection to database successfully initiated!")
-            return True
-        else:
-            messagebox.showerror("Connection Error", "The connection to the database could not be established. "
-                                                     "Please check the configuration under Main -> Customize DB Config")
-            self.label_connection_check.config(text="Please check the configuration under Main -> Customize DB Config")
-            return False
-
-    def command_start_button(self):
-        """
-        Create status page and delete Welcome Page
-        :return: None
-        """
-        self.controller.create_page(StatusPage)
-        self.controller.show_frame_with_delete(StatusPage, WelcomePage)
 
 
 class StatusPage(BasicPage):
@@ -504,3 +504,84 @@ class ConfigDBPage (BasicPage):
             messagebox.showinfo(title="Connection initialized",
                                 message="Connection to database is successfully initialized. \n"
                                         "You can now navigate back to the Welcome Page and start the application.")
+
+
+class CreateEntitiesPage (BasicPage):
+    """
+
+    """
+
+    def __init__(self, parent, controller):
+
+        # call constructor of superclass
+        super().__init__(parent, controller)
+
+        # data frame of sectors
+        self.df_sectors = pd.DataFrame(columns=['ID', 'sector_name'])
+
+        # data frame of countries
+        self.df_countries = pd.DataFrame(columns=['ID', 'country_name'])
+
+        # id of the created company (referenced from shares)
+        self.new_company_id = None
+
+        # create heading
+        self.label_heading = ttk.Label(self, text="Create new entities", font=HEADING1_FONT)
+        self.label_heading.place(x=480, y=50, anchor='center')
+
+        # create heading New Company
+        self.label_heading_new_company = ttk.Label(self, text="New Company", font=LARGE_FONT)
+        self.label_heading_new_company.place(x=100, y=150, anchor='center')
+
+        # create label for name of company
+        self.label_company_name = ttk.Label(self, text="company name", font=NORMAL_FONT)
+        self.label_company_name.place(x=125, y=200, anchor='center')
+
+        # create entry for name of company
+        self.entry_company_name = ttk.Entry(self)
+        self.entry_company_name.place(x=250, y=200, anchor='center')
+
+        # create label for country
+        self.label_country = ttk.Label(self, text="country", font=NORMAL_FONT)
+        self.label_country.place(x=350, y=200, anchor='center')
+
+        # create combobox for country
+        self.combobox_country = ttk.Combobox(self, width=25)
+        self.combobox_country.place(x=475, y=200, anchor='center')
+
+        # create label for sector
+        self.label_sector = ttk.Label(self, text="sector", font=NORMAL_FONT)
+        self.label_sector.place(x=625, y=200, anchor='center')
+
+        # create label for combobox
+        self.combobox_sector = ttk.Combobox(self, width=35)
+        self.combobox_sector.place(x=775, y=200, anchor='center')
+
+        # create button to create company in DB
+        self.button_new_company = ttk.Button(self, text="Create company in DB", command=self.create_new_company_in_db)
+        self.button_new_company.place(x=200, y=250, anchor='center')
+
+    def update_frame(self):
+
+        # update sector combobox
+        self.df_sectors = DB_Communication.get_all_sectors(self.db_connection.cursor())
+        self.combobox_sector.config(values=list(self.df_sectors.sector_name))
+        self.combobox_sector.current(0)
+
+        # update country combobox
+        self.df_countries = DB_Communication.get_all_countries(self.db_connection.cursor())
+        self.combobox_country.config(values=list(self.df_countries.country_name))
+        self.combobox_country.current(0)
+
+    def create_new_company_in_db(self):
+        index_country_selected = self.combobox_country.current()
+        index_sector_selected = self.combobox_sector.current()
+        company_name = self.entry_company_name.get()
+
+        if company_name == "":
+            messagebox.showinfo("Missing Company Name", "Please insert a company name!")
+        else:
+            self.new_company_id = DB_Communication.insert_company(self.db_connection,
+                                                                  company_name,
+                                                                  self.df_countries.ID[index_country_selected],
+                                                                  self.df_sectors.ID[index_sector_selected])

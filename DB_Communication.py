@@ -1,5 +1,6 @@
 import psycopg2
 import json
+import pandas as pd
 """
     This python file is used to implement the connection to the database.
     The credentials for the database are read from a JSON file, found in : ./data/db_config.json
@@ -71,7 +72,7 @@ def connect_to_db_with_params(db_name, host, user, password):
 
         conn = psycopg2.connect("dbname='" + db_name + "' user='" + user + "' host='"
                                 + host + "' password='" + password + "'")
-
+        conn.set_client_encoding('UTF-8')
         return conn
     except:
         return None
@@ -155,3 +156,100 @@ def get_total_number_of_shares(sql_cursor):
     number_of_shares = sql_cursor.fetchall()[0][0]
 
     return number_of_shares
+
+
+def get_all_sectors(sql_cursor):
+
+    sql_query = 'SELECT * FROM param.sectors ORDER BY sector_name ASC'
+
+    sql_cursor.execute(sql_query)
+
+    df_sectors = pd.DataFrame(columns=['ID', 'sector_name'])
+    for each_line in sql_cursor.fetchall():
+
+        key, value = each_line
+
+        df_sectors = df_sectors.append({'ID':key, 'sector_name': value}, ignore_index=True)
+
+    return df_sectors
+
+
+def get_all_countries(sql_cursor):
+
+    sql_query = 'SELECT "ID", country_name FROM param.countries ORDER BY country_name ASC'
+
+    sql_cursor.execute(sql_query)
+
+    df_countries = pd.DataFrame(columns=['ID', 'country_name'])
+    for each_line in sql_cursor.fetchall():
+
+        key, value = each_line
+
+        df_countries = df_countries.append({'ID': key, 'country_name': value}, ignore_index=True)
+
+    return df_countries
+
+
+def create_insert_into_statement(table_name, column_names, returning=False):
+
+
+    """
+    s.o.
+    """
+
+    query_string = "INSERT INTO " + table_schema_relation[table_name] + "." + table_name + " ("
+
+    # iterate over the columns
+    for column, i in zip(column_names, range(1, len(column_names) + 1 )):
+
+        # append column name in quotes
+        query_string += '"' + column + '"'
+
+        # append closing bracket after last column, else append a comma
+        if i == len(column_names):
+            query_string += ")"
+
+        else:
+            query_string += ", "
+
+    # append series placeholder for each column
+    query_string += " VALUES(" + "%s, " * (len(column_names) - 1) + "%s)"
+
+    if returning:
+        query_string += ' RETURNING "ID"'
+
+    return query_string
+
+
+def insert_company(db_connection, company_name, country, sector):
+    """
+
+    :param db_connection:
+    :param company_name:
+    :param country:
+    :param sector:
+    :return:
+    """
+    # TODO Handling of UniqueViolation (throw error and catch on GUI) -> see comment
+    sql_cursor = db_connection.cursor()
+    column_names = get_column_names_from_db_table(sql_cursor, "companies")
+    column_names.remove("ID")
+    query = create_insert_into_statement("companies", column_names, returning=True)
+    sql_cursor.execute(query, (company_name, country, sector))
+    db_connection.commit()
+    idx_new_row = sql_cursor.fetchone()[0]
+    return idx_new_row
+
+
+"""
+try:
+    sql_cursor.execute(query, (company_name, country, sector))
+except psycopg2.errors.UniqueViolation:
+    print("Hallo")
+    
+"""
+
+
+
+
+
