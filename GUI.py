@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from ISIN_Validator import is_isin_valid
 import DB_Communication
 from PIL import ImageTk
 import json
@@ -691,6 +692,7 @@ class CreateEntitiesPage (BasicPage):
         # TODO: integrate comment
         comment = ""
 
+        # TODO: first validator then duplicate check
         # get list of current isin
         list_isin = DB_Communication.get_all_isin(self.db_connection.cursor())
 
@@ -704,12 +706,10 @@ class CreateEntitiesPage (BasicPage):
                                  "comment": comment,
                                  "company_id": self.new_company_id}
 
-            # TODO: Integrate ISIN VALIDATOR
-            # https://de.wikipedia.org/wiki/Internationale_Wertpapierkennnummer
-            # check for empty user input
             if isin == "":
                 messagebox.showinfo("Missing ISIN", "Please insert an ISIN!")
-            else:
+            elif is_isin_valid(isin):
+
                 error = DB_Communication.insert_share(self.db_connection, dict_share_values)
 
                 if error is None:
@@ -718,3 +718,8 @@ class CreateEntitiesPage (BasicPage):
                 else:
                     messagebox.showerror("DB Error", "An error has occured. Please try again."
                                                      " In case the error remains, please restart the application")
+            elif is_isin_valid(isin) is not None:
+                messagebox.showerror("Invalid ISIN", "The entered ISIN is well-formated but invalid. \nPlease change it.")
+            else:
+                messagebox.showerror("Format Error ISIN", "The entered ISIN does not meet the expected format. \n "
+                                                          "Please try again.")
