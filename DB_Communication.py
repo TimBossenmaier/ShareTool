@@ -15,24 +15,24 @@ import pandas as pd
 
 # dictionary containing the relation of a table to its schema
 table_schema_relation = {
-    "PERs" : "data",
-    "ROAs" : "data",
+    "PERs": "data",
+    "ROAs": "data",
     "assetTurnovers": "data",
     "cashflows": "data",
     "dividendReturns": "data",
     "dividends": "data",
     "estimations": "data",
     "grossMargins": "data",
-    "leverages" : "data",
+    "leverages": "data",
     "liquidities": "data",
-    "profits" : "data",
+    "profits": "data",
     "sharePrices": "data",
-    "companies" : "entities",
-    "shares" : "entities",
-    "categories" : "param",
-    "countries" : "param",
-    "currencies" : "param",
-    "sectors" : "param"
+    "companies": "entities",
+    "shares": "entities",
+    "categories": "param",
+    "countries": "param",
+    "currencies": "param",
+    "sectors": "param"
 }
 
 
@@ -54,7 +54,8 @@ def connect_to_db():
                                 + "' host='" + dict_db_params["host"] + "' password='" +  dict_db_params["password"] + "'")
 
         return conn
-    except:
+
+    except BaseException:
         return None
 
 
@@ -74,7 +75,7 @@ def connect_to_db_with_params(db_name, host, user, password):
                                 + host + "' password='" + password + "'")
         conn.set_client_encoding('UTF-8')
         return conn
-    except:
+    except BaseException:
         return None
 
 
@@ -107,18 +108,16 @@ def get_column_names_from_db_table(sql_cursor, table_name):
     sql_cursor.execute(sql_query_table_names)
     table_column_names = sql_cursor.fetchall()
 
-    column_names = list()
+    list_column_names = list()
 
     # append each result to the list
     for each_name in table_column_names:
-        column_names.append(each_name[0])
+        list_column_names.append(each_name[0])
 
-    return column_names
+    return list_column_names
 
 
 def create_insert_into_statement_for_df(df, table_name):
-
-
     """
     Creates the special form of a INSERT statement required by psycopg2
     :param df: dataframe to be inserted
@@ -148,17 +147,30 @@ def create_insert_into_statement_for_df(df, table_name):
 
 
 def get_total_number_of_shares(sql_cursor):
+    """
+    returns the total number of shares in the database
+    :param sql_cursor: current database cursor
+    :return: number of shares in db
+    """
 
+    # read in query string from corresponding file
     sql_query = open('./data/sql/get_total_number_of_shares.sql','r').read()
 
+    # execute query
     sql_cursor.execute(sql_query)
 
+    # get first entry of response
     number_of_shares = sql_cursor.fetchall()[0][0]
 
     return number_of_shares
 
 
 def get_all_sectors(sql_cursor):
+    """
+    query all sectors and their ID
+    :param sql_cursor: current database cursor
+    :return: returns all sectors and their ID as data frame
+    """
     # TODO: get all zu einer Funktion zusammenfassen
 
     sql_query = 'SELECT * FROM param.sectors ORDER BY sector_name ASC'
@@ -166,16 +178,25 @@ def get_all_sectors(sql_cursor):
     sql_cursor.execute(sql_query)
 
     df_sectors = pd.DataFrame(columns=['ID', 'sector_name'])
+
+    # loop over all entries of the response
     for each_line in sql_cursor.fetchall():
 
+        # separate into ID and name
         key, value = each_line
 
+        # create row in data frame for each value pair
         df_sectors = df_sectors.append({'ID':key, 'sector_name': value}, ignore_index=True)
 
     return df_sectors
 
 
 def get_all_countries(sql_cursor):
+    """
+    query all countries and their ID
+    :param sql_cursor: current database cursor
+    :return: returns all countries and their ID as data frame
+    """
     # TODO: get_all_* zu einer Funktion zusammenfassen
 
     sql_query = 'SELECT "ID", country_name FROM param.countries ORDER BY country_name ASC'
@@ -183,16 +204,25 @@ def get_all_countries(sql_cursor):
     sql_cursor.execute(sql_query)
 
     df_countries = pd.DataFrame(columns=['ID', 'country_name'])
+
+    # loop over all entries of the response
     for each_line in sql_cursor.fetchall():
 
+        # separate into ID and name
         key, value = each_line
 
+        # create row in data frame for each value pair
         df_countries = df_countries.append({'ID': key, 'country_name': value}, ignore_index=True)
 
     return df_countries
 
 
 def get_all_categories(sql_cursor):
+    """
+    query all categories and their ID
+    :param sql_cursor: current database cursor
+    :return: returns all categories and their ID as data frame
+    """
     # TODO: get_all_* zu einer Funktion zusammenfassen
 
     sql_query = 'SELECT "ID", category_name FROM param.categories ORDER BY category_name ASC'
@@ -201,15 +231,24 @@ def get_all_categories(sql_cursor):
 
     df_categories = pd.DataFrame(columns=['ID', 'category_name'])
 
+    # loop over all entries of the response
     for each_line in sql_cursor.fetchall():
 
+        # separate into ID and name
         key, value = each_line
 
+        # create row in data frame for each value pair
         df_categories = df_categories.append({'ID': key,'category_name': value}, ignore_index=True)
 
     return df_categories
 
+
 def get_all_currencies(sql_cursor):
+    """
+    query all currencies and their ID
+    :param sql_cursor: current database cursor
+    :return: returns all currencies and their ID as data frame
+    """
     # TODO: get_all_* zu einer Funktion zusammenfassen
 
     sql_query = 'SELECT "ID", currency_name FROM param.currencies ORDER BY currency_name ASC'
@@ -218,20 +257,47 @@ def get_all_currencies(sql_cursor):
 
     df_currencies = pd.DataFrame(columns=['ID', 'currency_name'])
 
+    # loop over all entries of the response
     for each_line in sql_cursor.fetchall():
 
+        # separate into ID and name
         key, value = each_line
 
+        # create row in data frame for each value pair
         df_currencies = df_currencies.append({'ID': key, 'currency_name': value}, ignore_index=True)
 
     return df_currencies
 
 
-def create_insert_into_statement(table_name, column_names, returning=False):
-
-
+def get_all_isin(sql_cursor):
     """
-    s.o.
+    query all isin
+    :param sql_cursor: current database cursor
+    :return: returns all isin as list
+    """
+    # TODO: get_all_* zu einer Funktion zusammenfassen
+
+    sql_query = 'SELECT isin FROM entities.shares'
+
+    sql_cursor.execute(sql_query)
+
+    list_isin = []
+
+    for each_line in sql_cursor.fetchall():
+
+        # append each entry to list
+        list_isin.append(each_line[0])
+
+    return list_isin
+
+
+def create_insert_into_statement(table_name, column_names, returning=False):
+    """
+    Creates the special form of a INSERT statement required by psycopg2
+    :param table_name: name of table which receives inserts
+    :param column_names: list of all column names integrated in the query
+    :param returning: indicates whether a returning clause should be included
+    :return: sql statement as a string
     """
 
     query_string = "INSERT INTO " + table_schema_relation[table_name] + "." + table_name + " ("
@@ -260,44 +326,57 @@ def create_insert_into_statement(table_name, column_names, returning=False):
 
 def insert_company(db_connection, company_name, country, sector):
     """
-
-    :param db_connection:
-    :param company_name:
-    :param country:
-    :param sector:
-    :return:
+    Performs INSERT statement for a company
+    :param db_connection: psycopg2 connection to database
+    :param company_name: name of the company as string
+    :param country: id of country (serves as foreign key)
+    :param sector: id of sector (serves as foreign key)
+    :return: id of the created company entry
     """
-    # TODO Handling of UniqueViolation (throw error and catch on GUI) -> see comment
+
     sql_cursor = db_connection.cursor()
+
     column_names = get_column_names_from_db_table(sql_cursor, "companies")
+
+    # remove ID as this is generated automatically by the database
     column_names.remove("ID")
+
+    # create insert statement with returning clause
     query = create_insert_into_statement("companies", column_names, returning=True)
+
     sql_cursor.execute(query, (company_name, country, sector))
     db_connection.commit()
+
+    # process returned key
     idx_new_row = sql_cursor.fetchone()[0]
+
     return idx_new_row
 
 
-"""
-try:
-    sql_cursor.execute(query, (company_name, country, sector))
-except psycopg2.errors.UniqueViolation:
-    print("Hallo")
-    
-"""
-
 def insert_share(db_connection, values):
+    """
+    Performs insert statement of a share
+    :param db_connection: psycopg2 connection to database
+    :param values: dictionary of values to be integrated in the statement
+    :return: error message
+    """
 
-    sql_cursor = db_connection.cursor()
-    column_names =  get_column_names_from_db_table(sql_cursor, "shares")
-    column_names.remove("ID")
-    query = create_insert_into_statement("shares", column_names)
-    sql_cursor.execute(query, (values["company_id"], values["isin"], values["category_id"],
-                               values["comment"], values["currency_id"]))
-    db_connection.commit()
+    error_message = None
+    try:
+        sql_cursor = db_connection.cursor()
 
+        column_names = get_column_names_from_db_table(sql_cursor, "shares")
 
+        # remove ID as this is generated automatically by the database
+        column_names.remove("ID")
 
+        query = create_insert_into_statement("shares", column_names)
+        sql_cursor.execute(query, (values["company_id"], values["isin"], values["category_id"],
+                                   values["comment"], values["currency_id"]))
 
+        db_connection.commit()
 
+    except BaseException as e:
+        error_message = e
 
+    return error_message
