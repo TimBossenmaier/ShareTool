@@ -82,6 +82,15 @@ class ShareToolGUI(tk.Tk):
         self.frame_welcome_page.grid(row=0, column=0, sticky='nsew')
         self.show_frame(WelcomePage)
 
+    def get_db_connection(self):
+        return self.db_connection
+
+    def set_db_connection(self, con):
+        self.db_connection = con
+
+    def get_frames(self):
+        return self.frames
+
     def show_frame(self, page):
         """
         Show the given page to the user
@@ -112,12 +121,6 @@ class ShareToolGUI(tk.Tk):
 
         # delete the old page
         del(self.frames[old_page])
-
-    def get_db_connection(self):
-        return self.db_connection
-
-    def set_db_connection(self, con):
-        self.db_connection = con
 
     def create_page(self, page):
         """
@@ -359,6 +362,8 @@ class StatusPage(BasicPage):
         Update all instaces using values from the db
         :return: None
         """
+        # get latest db_connection
+        self.set_db_connection(self.get_controller().get_db_connection())
 
         # update number of shares
         self.change_label_number_of_shares()
@@ -442,8 +447,7 @@ class ConfigDBPage (BasicPage):
 
         # create button for back to status page
         self.button_go_to_welcome_page = ttk.Button(self, text="Go Back to Welcome Page",
-                                                    command=lambda: self.get_controller()
-                                                    .show_frame_with_delete(WelcomePage, ConfigDBPage))
+                                                    command=self.show_available_frame)
         self.button_go_to_welcome_page.place(x=475, y=425, anchor='center')
 
     def update_frame(self):
@@ -452,10 +456,16 @@ class ConfigDBPage (BasicPage):
         :return: None
         """
 
-        # read the cofig JSON and load it as JSON
+        # read the config JSON and load it as JSON
         with open('./data/db_config.json', encoding='utf-8') as F:
             dict_db_params = json.load(F)
         F.close()
+
+        # reset entries in case frame gets reopened
+        self.entry_db_name.delete(0, tk.END)
+        self.entry_hostname.delete(0, tk.END)
+        self.entry_user_name.delete(0, tk.END)
+        self.entry_pw.delete(0, tk.END)
 
         # display values from config file in entries
         self.entry_db_name.insert(tk.END, dict_db_params["db_name"])
@@ -501,11 +511,32 @@ class ConfigDBPage (BasicPage):
         if db_connection is None:
             messagebox.showerror(title="No Connection",
                                  message="It's not possible to get a connection to the database"
-                                         " with the chosen parameters. Please try again!")
+                                         " with the chosen parameters. \n The connection has not changed. \n"
+                                         "Please try again!")
         else:
             messagebox.showinfo(title="Connection initialized",
                                 message="Connection to database is successfully initialized. \n"
                                         "You can now navigate back to the Welcome Page and start the application.")
+            self.db_connection = db_connection
+
+            # pass db_connection to controller
+            self.controller.set_db_connection(self.db_connection)
+
+    def show_available_frame(self):
+        """
+        shows the WelcomePage if it's available, otherwise StatusPage is displayed (one of both is always available)
+        available pages depend on user behavior
+        :return: None
+        """
+
+        controller = self.get_controller()
+        list_curr_frames = controller.get_frames()
+
+        if WelcomePage in list_curr_frames:
+
+            controller.show_frame_with_delete(WelcomePage, ConfigDBPage)
+        else:
+            controller.show_frame_with_delete(StatusPage, ConfigDBPage)
 
 
 class CreateEntitiesPage (BasicPage):
@@ -761,4 +792,3 @@ class CreateEntitiesPage (BasicPage):
 
     def set_comment(self, comm):
         self.comment = comm
-
