@@ -14,6 +14,92 @@ NORMAL_FONT = ("Open Sans", 11)
 SMALL_FONT = ("Open Sans", 8)
 
 
+class AutocompleteCombobox(ttk.Combobox):
+    """
+        Class realizes an Combobox with autocomplete function
+        reference to: https://mail.python.org/pipermail/tkinter-discuss/2012-January/003041.html
+    """
+
+    def set_completion_list(self, completion_list):
+        """
+        Use completion list as drop down selection menu, arrows move through menu
+        :param completion_list: list of all possible values
+        :return: None
+        """
+
+        self._completion_list = sorted(completion_list, key=str.lower)
+        self._hits = []
+        self._hit_index = 0
+        self.position = 0
+        self.bind('<KeyRelease>', self.handle_keyrelease)
+        self['values'] = self._completion_list  # set up the popup menu
+
+    def autocomplete(self, delta=0):
+        """
+        Autocomplete the Combobox, delta may be -1/0/1 to cycle through possible hits.
+        :param delta:
+        :return: None
+        """
+
+        # need to delete selection otherwise current position would be fixed
+        if delta:
+            self.delete(self.position, tk.END)
+
+        # set position to end, so selection starts where text entry ends
+        else:
+            self.position = len(self.get())
+
+        # collect hits
+        _hits = []
+
+        for element in self._completion_list:
+            # Match case insensitively
+            if element.lower().startswith(self.get().lower()):
+                _hits.append(element)
+
+        # keep list only if it is different
+        if _hits != self._hits:
+            self._hit_index = 0
+            self._hits = _hits
+
+        # allow cycling only if the list is already known
+        if _hits == self._hits and self._hits:
+            self._hit_index = (self._hit_index + delta) % len(self._hits)
+
+        # perform auto completion
+        if self._hits:
+            self.delete(0, tk.END)
+            self.insert(0, self._hits[self._hit_index])
+            self.select_range(self.position, tk.END)
+
+    def handle_keyrelease(self, event):
+        """
+        Event handler for the key release event
+        :param event: key release event
+        :return: None
+        """
+
+        if event.keysym == "BackSpace":
+            self.delete(self.index(tk.INSERT), tk.END)
+            self.position = self.index(tk.END)
+
+        if event.keysym == "Left":
+            if self.position < self.index(tk.END):
+                self.delete(self.position, tk.END)
+            else:
+                self.position = self.position - 1
+                self.delete(self.position, tk.END)
+
+        if event.keysym == "Right":
+            self.position = self.index(tk.END)
+
+        if len(event.keysym) == 1:
+            self.autocomplete()
+
+            # display all values that match the current input
+            self.config(values=list(self._hits))
+
+
 class ShareToolGUI(tk.Tk):
     """
     Define the basic application.
@@ -588,7 +674,7 @@ class CreateEntitiesPage (BasicPage):
         self.label_country.place(x=350, y=200, anchor='center')
 
         # create combobox for country
-        self.combobox_country = ttk.Combobox(self, width=25)
+        self.combobox_country = AutocompleteCombobox(self, width=25)
         self.combobox_country.place(x=475, y=200, anchor='center')
 
         # create label for sector
@@ -596,7 +682,7 @@ class CreateEntitiesPage (BasicPage):
         self.label_sector.place(x=625, y=200, anchor='center')
 
         # create label for combobox
-        self.combobox_sector = ttk.Combobox(self, width=35)
+        self.combobox_sector = AutocompleteCombobox(self, width=35)
         self.combobox_sector.place(x=775, y=200, anchor='center')
 
         # create button to create company in DB
@@ -620,7 +706,7 @@ class CreateEntitiesPage (BasicPage):
         self.label_category.place(x=375, y=400, anchor='center')
 
         # create combobox for category
-        self.combobox_category = ttk.Combobox(self, width=15)
+        self.combobox_category = AutocompleteCombobox(self, width=15)
         self.combobox_category.place(x=475, y=400, anchor='center')
 
         # create label for currency
@@ -628,7 +714,7 @@ class CreateEntitiesPage (BasicPage):
         self.label_currency.place(x=625, y=400, anchor='center')
 
         # create combobox for currency
-        self.combobox_currency = ttk.Combobox(self, width=25)
+        self.combobox_currency = AutocompleteCombobox(self, width=25)
         self.combobox_currency.place(x=775, y=400, anchor='center')
 
         # create button for adding a comment
@@ -647,22 +733,22 @@ class CreateEntitiesPage (BasicPage):
 
         # update sector combobox
         self.df_sectors = DB_Communication.get_all_sectors(self.db_connection.cursor())
-        self.combobox_sector.config(values=list(self.df_sectors.sector_name))
+        self.combobox_sector.set_completion_list(self.df_sectors.sector_name)
         self.combobox_sector.current(0)
 
         # update country combobox
         self.df_countries = DB_Communication.get_all_countries(self.db_connection.cursor())
-        self.combobox_country.config(values=list(self.df_countries.country_name))
+        self.combobox_country.set_completion_list(self.df_countries.country_name)
         self.combobox_country.current(0)
 
         # update category combobox
         self.df_categories = DB_Communication.get_all_categories(self.db_connection.cursor())
-        self.combobox_category.config(values=list(self.df_categories.category_name))
+        self.combobox_category.set_completion_list(self.df_categories.category_name)
         self.combobox_category.current(1)  # category 'value' is most common
 
         # update currency combobox
         self.df_currencies = DB_Communication.get_all_currencies(self.db_connection.cursor())
-        self.combobox_currency.config(values=list(self.df_currencies.currency_name))
+        self.combobox_currency.set_completion_list(self.df_currencies.currency_name)
         self.combobox_currency.current(0)
 
         if delete_entries:
