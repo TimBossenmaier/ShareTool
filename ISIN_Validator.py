@@ -6,8 +6,9 @@ def is_isin_valid(string_isin):
     Checks a given ISIN for validity
     reference to: https://en.wikipedia.org/wiki/International_Securities_Identification_Number
     reference to: http://code.activestate.com/recipes/498277-isin-validator/
-    :param string_isin:
-    :return:
+    :param string_isin: ISIN to be checked
+    :return: None in case the string does not meet format requirements, True in case the ISIN is valid,
+            false in case not
     """
 
     # check the ISIN to be exactly 12 alphanumeric characters
@@ -55,7 +56,7 @@ def is_isin_valid(string_isin):
 
     # calculate check digit
     mod = (even_sum + odd_sum) % 10
-    check_digit_calc = 10 - mod
+    check_digit_calc = (10 - mod) % 10
 
     if check_digit == check_digit_calc:
         return True
