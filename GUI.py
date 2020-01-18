@@ -1,9 +1,11 @@
 import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
+from tkinter.scrolledtext import ScrolledText
+from ISIN_Validator import is_isin_valid
 import DB_Communication
 from PIL import ImageTk
 import json
+import pandas as pd
 
 # Define some fonts
 HEADING1_FONT = ("Open Sans", 16, "bold")
@@ -58,7 +60,7 @@ class ShareToolGUI(tk.Tk):
 
         # create menu for new entries
         self.menu_new = tk.Menu(self.menubar, tearoff=0)
-        self.menu_new.add_command(label="Entities", command=self.depends_on_db)
+        self.menu_new.add_command(label="Entities", command=self.menu_bar_open_create_entities)
         self.menu_new.add_command(label="Data", command=self.depends_on_db)
         self.menubar.add_cascade(label="New", menu=self.menu_new)
 
@@ -103,7 +105,7 @@ class ShareToolGUI(tk.Tk):
 
         # get instance of page by class
         frame = self.frames[page]
-        
+
         # update frame and show it to the user
         frame.update_frame()
         frame.tkraise()
@@ -116,6 +118,28 @@ class ShareToolGUI(tk.Tk):
 
     def set_db_connection(self, con):
         self.db_connection = con
+
+    def create_page(self, page):
+        """
+        Create a page and add it to self.frames
+        :param page: class of page to be created
+        :return: None
+        """
+        frame = page(self.container, self)
+        self.frames[page] = frame
+        frame.grid(row=0, column=0, sticky='nsew')
+
+    # TODO: has to be replaced stepwise
+    def depends_on_db(self):
+        """
+        ONLY FOR DEVELOPMENT
+        """
+        if self.db_connection is None:
+            messagebox.showinfo(title='Configure DB',
+                                message="Please ensure valid db connection before proceed")
+        else:
+            messagebox.showinfo(title='Stay tuned!',
+                                message="Unfortunately not supported yet")
 
     def menu_bar_open_status_page(self):
         """
@@ -137,31 +161,6 @@ class ShareToolGUI(tk.Tk):
             self.create_page(StatusPage)
             self.show_frame_with_delete(StatusPage, WelcomePage)
 
-    def create_page(self, page):
-        """
-        Create a page and add it to self.frames
-        :param page: class of page to be created
-        :return: None
-        """
-        frame = page(self.container, self)
-        self.frames[page] = frame
-        frame.grid(row=0, column=0, sticky='nsew')
-
-
-    # TODO: has to be replaced stepwise
-
-    def depends_on_db(self):
-        """
-        ONLY FOR DEVELOPMENT
-        """
-        if self.db_connection is None:
-            messagebox.showinfo(title='Configure DB',
-                                message="Please ensure valid db connection before proceed")
-        else:
-            messagebox.showinfo(title='Stay tuned!',
-                                message="Unfortunately not supported yet")
-
-
     def menu_bar_open_custom_db(self):
         """
         Opens a frame allowing the user to customize the DB configuration
@@ -175,6 +174,26 @@ class ShareToolGUI(tk.Tk):
             self.create_page(ConfigDBPage)
             self.show_frame(ConfigDBPage)
 
+    def menu_bar_open_create_entities(self):
+        """
+        Opens a frame allowing the user to create new entities
+        Creates page as well if required
+        :return: None
+        """
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message="Please first ensure the database connection to be established")
+
+        # check whether CreateEntitiesPage exists already
+        elif CreateEntitiesPage in self.frames.keys():
+            self.show_frame(CreateEntitiesPage)
+
+        # create CreateEntitiesPage if not
+        else:
+            self.create_page(CreateEntitiesPage)
+            self.show_frame(CreateEntitiesPage)
 
 
 class BasicPage(tk.Frame):
@@ -235,7 +254,6 @@ class WelcomePage(BasicPage):
         self.button_start_page.place(x=480, y=420, anchor='center')
         self.button_start_page['state'] = "disabled"
 
-
     def change_label_according_to_db_availability(self):
         """
         Check the connection to the database, set the application's connection accordingly and
@@ -277,22 +295,6 @@ class WelcomePage(BasicPage):
         # button is only active in case of a active db connection
         if is_connection_successful:
             self.button_start_page['state'] = "normal"
-
-            self.label_connection_check.config(text="Connection to database successfully initiated!")
-            return True
-        else:
-            messagebox.showerror("Connection Error", "The connection to the database could not be established. "
-                                                     "Please check the configuration under Main -> Customize DB Config")
-            self.label_connection_check.config(text="Please check the configuration under Main -> Customize DB Config")
-            return False
-
-    def command_start_button(self):
-        """
-        Create status page and delete Welcome Page
-        :return: None
-        """
-        self.controller.create_page(StatusPage)
-        self.controller.show_frame_with_delete(StatusPage, WelcomePage)
 
 
 class StatusPage(BasicPage):
@@ -504,3 +506,259 @@ class ConfigDBPage (BasicPage):
             messagebox.showinfo(title="Connection initialized",
                                 message="Connection to database is successfully initialized. \n"
                                         "You can now navigate back to the Welcome Page and start the application.")
+
+
+class CreateEntitiesPage (BasicPage):
+    """
+    Page allows user to create new entries for company and share
+    """
+
+    def __init__(self, parent, controller):
+
+        # call constructor of superclass
+        super().__init__(parent, controller)
+
+        # data frame of sectors
+        self.df_sectors = pd.DataFrame(columns=['ID', 'sector_name'])
+
+        # data frame of countries
+        self.df_countries = pd.DataFrame(columns=['ID', 'country_name'])
+
+        # data frame of categories
+        self.df_categories = pd.DataFrame(columns=['ID', 'category_name'])
+
+        # data frame of currencies
+        self.df_currencies = pd.DataFrame(columns=['ID', 'currency_name'])
+
+        # id of the created company (referenced from shares)
+        self.new_company_id = None
+
+        # comment for share
+        self.comment = ""
+
+        # create heading
+        self.label_heading = ttk.Label(self, text="Create new entities", font=HEADING1_FONT)
+        self.label_heading.place(x=480, y=50, anchor='center')
+
+        # create heading New Company
+        self.label_heading_new_company = ttk.Label(self, text="New Company", font=LARGE_FONT)
+        self.label_heading_new_company.place(x=100, y=150, anchor='center')
+
+        # create label for name of company
+        self.label_company_name = ttk.Label(self, text="company name", font=NORMAL_FONT)
+        self.label_company_name.place(x=125, y=200, anchor='center')
+
+        # create entry for name of company
+        self.entry_company_name = ttk.Entry(self)
+        self.entry_company_name.place(x=250, y=200, anchor='center')
+
+        # create label for country
+        self.label_country = ttk.Label(self, text="country", font=NORMAL_FONT)
+        self.label_country.place(x=350, y=200, anchor='center')
+
+        # create combobox for country
+        self.combobox_country = ttk.Combobox(self, width=25)
+        self.combobox_country.place(x=475, y=200, anchor='center')
+
+        # create label for sector
+        self.label_sector = ttk.Label(self, text="sector", font=NORMAL_FONT)
+        self.label_sector.place(x=625, y=200, anchor='center')
+
+        # create label for combobox
+        self.combobox_sector = ttk.Combobox(self, width=35)
+        self.combobox_sector.place(x=775, y=200, anchor='center')
+
+        # create button to create company in DB
+        self.button_new_company = ttk.Button(self, text="Create company in DB", command=self.create_new_company_in_db)
+        self.button_new_company.place(x=200, y=250, anchor='center')
+
+        # create heading for new share
+        self.label_heading_new_share = ttk.Label(self, text="New Share", font=LARGE_FONT)
+        self.label_heading_new_share.place(x=100, y=350, anchor='center')
+
+        # create label for isin
+        self.label_isin = ttk.Label(self, text="ISIN", font=NORMAL_FONT)
+        self.label_isin.place(x=145, y=400, anchor='center')
+
+        # create entry for isin
+        self.entry_isin = ttk.Entry(self)
+        self.entry_isin.place(x=250, y=400, anchor='center')
+
+        # create label for category
+        self.label_category = ttk.Label(self, text="Category", font=NORMAL_FONT)
+        self.label_category.place(x=375, y=400, anchor='center')
+
+        # create combobox for category
+        self.combobox_category = ttk.Combobox(self, width=15)
+        self.combobox_category.place(x=475, y=400, anchor='center')
+
+        # create label for currency
+        self.label_currency = ttk.Label(self, text='Currency', font=NORMAL_FONT)
+        self.label_currency.place(x=625, y=400, anchor='center')
+
+        # create combobox for currency
+        self.combobox_currency = ttk.Combobox(self, width=25)
+        self.combobox_currency.place(x=775, y=400, anchor='center')
+
+        # create button for adding a comment
+        self.button_add_comment = ttk.Button(self, text="Add comment", command=self.create_comment_dialog)
+        self.button_add_comment.place(x=200, y=450, anchor='center')
+
+        # create button for inserting share into db
+        self.button_new_share = ttk.Button(self, text="Create share in DB", command=self.create_new_share_in_db)
+        self.button_new_share.place(x=200, y=500, anchor='center')
+
+    def update_frame(self, shares_disabled=True, delete_entries=False):
+        """
+        update the frame's components
+        :return: None
+        """
+
+        # update sector combobox
+        self.df_sectors = DB_Communication.get_all_sectors(self.db_connection.cursor())
+        self.combobox_sector.config(values=list(self.df_sectors.sector_name))
+        self.combobox_sector.current(0)
+
+        # update country combobox
+        self.df_countries = DB_Communication.get_all_countries(self.db_connection.cursor())
+        self.combobox_country.config(values=list(self.df_countries.country_name))
+        self.combobox_country.current(0)
+
+        # update category combobox
+        self.df_categories = DB_Communication.get_all_categories(self.db_connection.cursor())
+        self.combobox_category.config(values=list(self.df_categories.category_name))
+        self.combobox_category.current(1)  # category 'value' is most common
+
+        # update currency combobox
+        self.df_currencies = DB_Communication.get_all_currencies(self.db_connection.cursor())
+        self.combobox_currency.config(values=list(self.df_currencies.currency_name))
+        self.combobox_currency.current(0)
+
+        if delete_entries:
+            # clear isin input
+            self.entry_isin.delete(0, tk.END)
+
+        # update visibility of components
+        if shares_disabled:
+            self.entry_isin["state"] = "disabled"
+            self.combobox_category["state"] = "disabled"
+            self.combobox_currency["state"] = "disabled"
+            self.button_add_comment["state"] = "disabled"
+            self.button_new_share["state"] = "disabled"
+            self.entry_company_name["state"] = "normal"
+            self.combobox_sector["state"] = "normal"
+            self.combobox_country["state"] = "normal"
+
+        else:
+            self.entry_isin["state"] = "normal"
+            self.combobox_category["state"] = "normal"
+            self.combobox_currency["state"] = "normal"
+            self.button_add_comment["state"] = "normal"
+            self.button_new_share["state"] = "normal"
+            self.entry_company_name["state"] = "disabled"
+            self.combobox_sector["state"] = "disabled"
+            self.combobox_country["state"] = "disabled"
+
+        if delete_entries:
+            # clear company name input
+            self.entry_company_name.delete(0, tk.END)
+
+    def create_new_company_in_db(self):
+        """
+        collects all inputs required to create a company entry and invokes corresponding method
+        :return: None
+        """
+
+        index_country_selected = self.combobox_country.current()
+        index_sector_selected = self.combobox_sector.current()
+        company_name = self.entry_company_name.get()
+
+        # check for empty user input
+        if company_name == "":
+            messagebox.showinfo("Missing Company Name", "Please insert a company name!")
+        else:
+            self.new_company_id = DB_Communication.insert_company(self.db_connection,
+                                                                  company_name,
+                                                                  self.df_countries.ID[index_country_selected],
+                                                                  self.df_sectors.ID[index_sector_selected])
+            self.update_frame(shares_disabled=False)
+
+    def create_new_share_in_db(self):
+        """
+        collects all inputs required to create a company entry and invokes corresponding method
+        :return: None
+        """
+
+        isin = self.entry_isin.get()
+        index_category = self.combobox_category.current()
+        index_currency = self.combobox_currency.current()
+        comment = self.comment
+
+        if isin == "":
+            messagebox.showinfo("Missing ISIN", "Please insert an ISIN!")
+        elif is_isin_valid(isin):
+
+            # get list of current isin
+            list_isin = DB_Communication.get_all_isin(self.db_connection.cursor())
+
+            # allow insert only for unique ISIN
+            if isin in list_isin:
+                messagebox.showerror("Duplicated ISIN", "The given ISIN does already exist.")
+            else:
+                dict_share_values = {"isin": isin,
+                                     "category_id": self.df_categories.ID[index_category],
+                                     "currency_id": self.df_currencies.ID[index_currency],
+                                     "comment": comment,
+                                     "company_id": self.new_company_id}
+
+                error = DB_Communication.insert_share(self.db_connection, dict_share_values)
+
+                if error is None:
+                    self.update_frame(shares_disabled=True, delete_entries=True)
+                    messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
+                else:
+                    messagebox.showerror("DB Error", "An error has occured. Please try again."
+                                                     " In case the error remains, please restart the application")
+        elif is_isin_valid(isin) is not None:
+            messagebox.showerror("Invalid ISIN", "The entered ISIN is well-formated but invalid. \n"
+                                 "Please change it.")
+        else:
+            messagebox.showerror("Format Error ISIN", "The entered ISIN does not meet the expected format. \n"
+                                 "Please try again.")
+
+    def create_comment_dialog(self):
+        """
+        create dialog window to enter a comment
+        :return: None
+        """
+
+        def get_text(master, panel, text):
+            """
+            get input from scrolled text and pass it as comment to master frame
+            :param master: master frame of the dialog window
+            :param panel: dialog window instance
+            :param text: scrolledText instance
+            :return: None
+            """
+            master.set_comment(text.get("1.0", tk.END))
+            panel.destroy()
+
+        # create a dialog window
+        top = tk.Toplevel()
+        top.title("Insert comment here")
+        top.geometry("400x200")
+        top.resizable(0, 0)
+
+        # allow user to input text
+        edit_space = ScrolledText(top, width=45, height=8, wrap='word')
+        edit_space.place(x=0, y=0, anchor='nw')
+
+        # create button to save input and close dialog
+        button_save_comment = ttk.Button(top, text="Save comment", command=lambda: get_text(self, top, edit_space))
+        button_save_comment.place(x=200, y=180, anchor='center')
+
+        top.mainloop()
+
+    def set_comment(self, comm):
+        self.comment = comm
+
