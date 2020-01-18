@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from tkinter.scrolledtext import ScrolledText
 from ISIN_Validator import is_isin_valid
 import DB_Communication
 from PIL import ImageTk
@@ -678,7 +679,7 @@ class CreateEntitiesPage (BasicPage):
                                                                   company_name,
                                                                   self.df_countries.ID[index_country_selected],
                                                                   self.df_sectors.ID[index_sector_selected])
-        self.update_frame(shares_disabled=False)
+            self.update_frame(shares_disabled=False)
 
     def create_new_share_in_db(self):
         """
@@ -692,34 +693,36 @@ class CreateEntitiesPage (BasicPage):
         # TODO: integrate comment
         comment = ""
 
-        # TODO: first validator then duplicate check
-        # get list of current isin
-        list_isin = DB_Communication.get_all_isin(self.db_connection.cursor())
+        error = None
 
-        # allow insert only for unique ISIN
-        if isin in list_isin:
-            messagebox.showerror("Duplicated ISIN", "The given ISIN does already exist.")
-        else:
-            dict_share_values = {"isin": isin,
-                                 "category_id": self.df_categories.ID[index_category],
-                                 "currency_id": self.df_currencies.ID[index_currency],
-                                 "comment": comment,
-                                 "company_id": self.new_company_id}
+        if isin == "":
+            messagebox.showinfo("Missing ISIN", "Please insert an ISIN!")
+        elif is_isin_valid(isin):
 
-            if isin == "":
-                messagebox.showinfo("Missing ISIN", "Please insert an ISIN!")
-            elif is_isin_valid(isin):
+            # get list of current isin
+            list_isin = DB_Communication.get_all_isin(self.db_connection.cursor())
+
+            # allow insert only for unique ISIN
+            if isin in list_isin:
+                messagebox.showerror("Duplicated ISIN", "The given ISIN does already exist.")
+            else:
+                dict_share_values = {"isin": isin,
+                                     "category_id": self.df_categories.ID[index_category],
+                                     "currency_id": self.df_currencies.ID[index_currency],
+                                     "comment": comment,
+                                     "company_id": self.new_company_id}
 
                 error = DB_Communication.insert_share(self.db_connection, dict_share_values)
 
-                if error is None:
-                    self.update_frame(shares_disabled=True, delete_entries=True)
-                    messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
-                else:
-                    messagebox.showerror("DB Error", "An error has occured. Please try again."
-                                                     " In case the error remains, please restart the application")
-            elif is_isin_valid(isin) is not None:
-                messagebox.showerror("Invalid ISIN", "The entered ISIN is well-formated but invalid. \nPlease change it.")
+            if error is None:
+                self.update_frame(shares_disabled=True, delete_entries=True)
+                messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
             else:
-                messagebox.showerror("Format Error ISIN", "The entered ISIN does not meet the expected format. \n "
-                                                          "Please try again.")
+                messagebox.showerror("DB Error", "An error has occured. Please try again."
+                                                 " In case the error remains, please restart the application")
+        elif is_isin_valid(isin) is not None:
+            messagebox.showerror("Invalid ISIN", "The entered ISIN is well-formated but invalid. \n"
+                                 "Please change it.")
+        else:
+            messagebox.showerror("Format Error ISIN", "The entered ISIN does not meet the expected format. \n"
+                                 "Please try again.")
