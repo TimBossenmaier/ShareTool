@@ -533,6 +533,9 @@ class CreateEntitiesPage (BasicPage):
         # id of the created company (referenced from shares)
         self.new_company_id = None
 
+        # comment for share
+        self.comment = ""
+
         # create heading
         self.label_heading = ttk.Label(self, text="Create new entities", font=HEADING1_FONT)
         self.label_heading.place(x=480, y=50, anchor='center')
@@ -598,8 +601,7 @@ class CreateEntitiesPage (BasicPage):
         self.combobox_currency.place(x=775, y=400, anchor='center')
 
         # create button for adding a comment
-        # TODO: add dialog to insert comment to share
-        self.button_add_comment = ttk.Button(self, text="Add comment")
+        self.button_add_comment = ttk.Button(self, text="Add comment", command=self.create_comment_dialog)
         self.button_add_comment.place(x=200, y=450, anchor='center')
 
         # create button for inserting share into db
@@ -690,10 +692,7 @@ class CreateEntitiesPage (BasicPage):
         isin = self.entry_isin.get()
         index_category = self.combobox_category.current()
         index_currency = self.combobox_currency.current()
-        # TODO: integrate comment
-        comment = ""
-
-        error = None
+        comment = self.comment
 
         if isin == "":
             messagebox.showinfo("Missing ISIN", "Please insert an ISIN!")
@@ -714,15 +713,52 @@ class CreateEntitiesPage (BasicPage):
 
                 error = DB_Communication.insert_share(self.db_connection, dict_share_values)
 
-            if error is None:
-                self.update_frame(shares_disabled=True, delete_entries=True)
-                messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
-            else:
-                messagebox.showerror("DB Error", "An error has occured. Please try again."
-                                                 " In case the error remains, please restart the application")
+                if error is None:
+                    self.update_frame(shares_disabled=True, delete_entries=True)
+                    messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
+                else:
+                    messagebox.showerror("DB Error", "An error has occured. Please try again."
+                                                     " In case the error remains, please restart the application")
         elif is_isin_valid(isin) is not None:
             messagebox.showerror("Invalid ISIN", "The entered ISIN is well-formated but invalid. \n"
                                  "Please change it.")
         else:
             messagebox.showerror("Format Error ISIN", "The entered ISIN does not meet the expected format. \n"
                                  "Please try again.")
+
+    def create_comment_dialog(self):
+        """
+        create dialog window to enter a comment
+        :return: None
+        """
+
+        def get_text(master, panel, text):
+            """
+            get input from scrolled text and pass it as comment to master frame
+            :param master: master frame of the dialog window
+            :param panel: dialog window instance
+            :param text: scrolledText instance
+            :return: None
+            """
+            master.set_comment(text.get("1.0", tk.END))
+            panel.destroy()
+
+        # create a dialog window
+        top = tk.Toplevel()
+        top.title("Insert comment here")
+        top.geometry("400x200")
+        top.resizable(0, 0)
+
+        # allow user to input text
+        edit_space = ScrolledText(top, width=45, height=8, wrap='word')
+        edit_space.place(x=0, y=0, anchor='nw')
+
+        # create button to save input and close dialog
+        button_save_comment = ttk.Button(top, text="Save comment", command=lambda: get_text(self, top, edit_space))
+        button_save_comment.place(x=200, y=180, anchor='center')
+
+        top.mainloop()
+
+    def set_comment(self, comm):
+        self.comment = comm
+
