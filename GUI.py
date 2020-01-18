@@ -878,5 +878,3 @@ class CreateEntitiesPage (BasicPage):
 
     def set_comment(self, comm):
         self.comment = comm
-
-
