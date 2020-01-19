@@ -20,18 +20,24 @@ class AutocompleteCombobox(ttk.Combobox):
         reference to: https://mail.python.org/pipermail/tkinter-discuss/2012-January/003041.html
     """
 
-    def set_completion_list(self, completion_list):
-        """
-        Use completion list as drop down selection menu, arrows move through menu
-        :param completion_list: list of all possible values
-        :return: None
-        """
+    def __init__(self, *args, **kwargs):
 
-        self._completion_list = sorted(completion_list, key=str.lower)
+        # call super constructor
+        super().__init__(*args, **kwargs)
+
+        self._completion_list = None
         self._hits = []
         self._hit_index = 0
         self.position = 0
         self.bind('<KeyRelease>', self.handle_keyrelease)
+
+    def set_completion_list(self, completion_list):
+        """
+        Use completion list as drop down selection menu
+        :param completion_list: list of all possible values
+        :return: None
+        """
+        self._completion_list = sorted(completion_list, key=str.lower)
         self['values'] = self._completion_list  # set up the popup menu
 
     def autocomplete(self, delta=0):
@@ -65,6 +71,7 @@ class AutocompleteCombobox(ttk.Combobox):
         # allow cycling only if the list is already known
         if _hits == self._hits and self._hits:
             self._hit_index = (self._hit_index + delta) % len(self._hits)
+            # self.current(self._hit_index)
 
         # perform auto completion
         if self._hits:
@@ -97,7 +104,7 @@ class AutocompleteCombobox(ttk.Combobox):
             self.autocomplete()
 
             # display all values that match the current input
-            self.config(values=list(self._hits))
+            # self.config(values=list(self._hits))
 
 
 class ShareToolGUI(tk.Tk):
@@ -532,7 +539,7 @@ class ConfigDBPage (BasicPage):
         self.button_save_connection.place(x=550, y=350, anchor='center')
 
         # create button for back to status page
-        self.button_go_to_welcome_page = ttk.Button(self, text="Go Back to Welcome Page",
+        self.button_go_to_welcome_page = ttk.Button(self, text="Go Back",
                                                     command=self.show_available_frame)
         self.button_go_to_welcome_page.place(x=475, y=425, anchor='center')
 
@@ -734,12 +741,10 @@ class CreateEntitiesPage (BasicPage):
         # update sector combobox
         self.df_sectors = DB_Communication.get_all_sectors(self.db_connection.cursor())
         self.combobox_sector.set_completion_list(self.df_sectors.sector_name)
-        self.combobox_sector.current(0)
 
         # update country combobox
         self.df_countries = DB_Communication.get_all_countries(self.db_connection.cursor())
         self.combobox_country.set_completion_list(self.df_countries.country_name)
-        self.combobox_country.current(0)
 
         # update category combobox
         self.df_categories = DB_Communication.get_all_categories(self.db_connection.cursor())
@@ -754,27 +759,38 @@ class CreateEntitiesPage (BasicPage):
         if delete_entries:
             # clear isin input
             self.entry_isin.delete(0, tk.END)
+            self.comment = ""
 
         # update visibility of components
         if shares_disabled:
+            # set share elements disabled
             self.entry_isin["state"] = "disabled"
             self.combobox_category["state"] = "disabled"
             self.combobox_currency["state"] = "disabled"
             self.button_add_comment["state"] = "disabled"
             self.button_new_share["state"] = "disabled"
             self.entry_company_name["state"] = "normal"
+
+            # set company elements normal
             self.combobox_sector["state"] = "normal"
             self.combobox_country["state"] = "normal"
+            self.button_new_company["state"] = "normal"
+            self.combobox_sector.current(0)
+            self.combobox_country.current(0)
 
         else:
+            # set share elements normal
             self.entry_isin["state"] = "normal"
             self.combobox_category["state"] = "normal"
             self.combobox_currency["state"] = "normal"
             self.button_add_comment["state"] = "normal"
             self.button_new_share["state"] = "normal"
+
+            # set company elements disabled
             self.entry_company_name["state"] = "disabled"
             self.combobox_sector["state"] = "disabled"
             self.combobox_country["state"] = "disabled"
+            self.button_new_company["state"] = "disabled"
 
         if delete_entries:
             # clear company name input
@@ -786,9 +802,12 @@ class CreateEntitiesPage (BasicPage):
         :return: None
         """
 
-        index_country_selected = self.combobox_country.current()
-        index_sector_selected = self.combobox_sector.current()
+        # get company name
         company_name = self.entry_company_name.get()
+
+        # determine IDs of selected values
+        country_id = self.df_countries.ID[self.df_countries.country_name == self.combobox_country.get()].iloc[0]
+        sector_id = self.df_sectors.ID[self.df_sectors.sector_name == self.combobox_sector.get()].iloc[0]
 
         # check for empty user input
         if company_name == "":
@@ -796,8 +815,8 @@ class CreateEntitiesPage (BasicPage):
         else:
             self.new_company_id = DB_Communication.insert_company(self.db_connection,
                                                                   company_name,
-                                                                  self.df_countries.ID[index_country_selected],
-                                                                  self.df_sectors.ID[index_sector_selected])
+                                                                  country_id,
+                                                                  sector_id)
             self.update_frame(shares_disabled=False)
 
     def create_new_share_in_db(self):
@@ -807,9 +826,11 @@ class CreateEntitiesPage (BasicPage):
         """
 
         isin = self.entry_isin.get()
-        index_category = self.combobox_category.current()
-        index_currency = self.combobox_currency.current()
         comment = self.comment
+
+        # determine IDs of selected values
+        category_id = self.df_categories.ID[self.df_categories.category_name == self.combobox_category.get()].iloc[0]
+        currency_id = self.df_currencies.ID[self.df_currencies.currency_name == self.combobox_currency.get()].iloc[0]
 
         if isin == "":
             messagebox.showinfo("Missing ISIN", "Please insert an ISIN!")
@@ -823,11 +844,10 @@ class CreateEntitiesPage (BasicPage):
                 messagebox.showerror("Duplicated ISIN", "The given ISIN does already exist.")
             else:
                 dict_share_values = {"isin": isin,
-                                     "category_id": self.df_categories.ID[index_category],
-                                     "currency_id": self.df_currencies.ID[index_currency],
+                                     "category_id": category_id,
+                                     "currency_id": currency_id,
                                      "comment": comment,
                                      "company_id": self.new_company_id}
-
                 error = DB_Communication.insert_share(self.db_connection, dict_share_values)
 
                 if error is None:
@@ -878,5 +898,3 @@ class CreateEntitiesPage (BasicPage):
 
     def set_comment(self, comm):
         self.comment = comm
-
-
