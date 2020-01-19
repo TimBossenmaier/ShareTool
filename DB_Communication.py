@@ -314,6 +314,28 @@ def get_all_shares(sql_cursor):
     return df_shares
 
 
+def get_years_for_specific_share(sql_cursor, table, share_id):
+    """
+
+    :param sql_cursor:
+    :param table:
+    :param share_id:
+    :return:
+    """
+
+    sql_query = 'SELECT tab.year FROM entities.shares share ' \
+                'JOIN data.' + table + ' tab on tab."share_ID" = share."ID" ' \
+                'WHERE share."ID" = ' + str(share_id)
+
+    sql_cursor.execute(sql_query)
+
+    list_years = []
+
+    for each_line in sql_cursor.fetchall():
+
+        list_years.append(each_line[0])
+
+    return list_years
 
 
 def create_insert_into_statement(table_name, column_names, returning=False):
@@ -405,3 +427,5 @@ def insert_share(db_connection, values):
         error_message = e
 
     return error_message
+
+
