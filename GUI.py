@@ -6,6 +6,7 @@ import DB_Communication
 from PIL import ImageTk
 import json
 import pandas as pd
+import datetime as dt
 
 # Define some fonts
 HEADING1_FONT = ("Open Sans", 16, "bold")
@@ -949,8 +950,78 @@ class InsertProfitsPage(BasicPage):
         self.combobox_shares.place(x=525, y=100, anchor='center')
 
         # create label for profits
-        self.label_heading_insert_profit = ttk.Label(self, text="Insert profits", font = LARGE_FONT)
+        self.label_heading_insert_profit = ttk.Label(self, text="Insert profits", font=LARGE_FONT)
         self.label_heading_insert_profit.place(x=100, y=150, anchor='center')
+
+        # create checkbox for first year
+        self.checkbox_year_1 = ttk.Checkbutton(self, onvalue=1, offvalue=0)
+        self.checkbox_year_1.place(x=125, y=200, anchor='center')
+
+        # create input box for year 1
+        self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_1)
+        self.spinbox_year_1.place(x=225, y=200, anchor='center')
+
+        # create input for profit 1
+        self.entry_profit_1 = ttk.Entry(self)
+        self.entry_profit_1.place(x=425, y=200, anchor='center')
+
+        # create checkbox for year 2
+        self.checkbox_year_2 = ttk.Checkbutton(self, onvalue=1, offvalue=0)
+        self.checkbox_year_2.place(x=125, y=250, anchor='center')
+
+        # create input box for year 2
+        self.spinbox_var_2 = tk.IntVar(value=self.create_five_year_range()[-2])
+        self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_2)
+        self.spinbox_year_2.place(x=225, y=250, anchor='center')
+
+        # create input for profit 2
+        self.entry_profit_2 = ttk.Entry(self)
+        self.entry_profit_2.place(x=425, y=250, anchor='center')
+
+        # create checkbox for year 3
+        self.checkbox_year_3 = ttk.Checkbutton(self, onvalue=1, offvalue=0)
+        self.checkbox_year_3.place(x=125, y=300, anchor='center')
+
+        # create input box for year 3
+        self.spinbox_var_3 = tk.IntVar(value=self.create_five_year_range()[-3])
+        self.spinbox_year_3 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_3)
+        self.spinbox_year_3.place(x=225, y=300, anchor='center')
+
+        # create input for profit 3
+        self.entry_profit_3 = ttk.Entry(self)
+        self.entry_profit_3.place(x=425, y=300, anchor='center')
+
+        # create checkbox for year 4
+        self.checkbox_year_4 = ttk.Checkbutton(self, onvalue=1, offvalue=0)
+        self.checkbox_year_4.place(x=125, y=350, anchor='center')
+
+        # create input box for year 4
+        self.spinbox_var_4 = tk.IntVar(value=self.create_five_year_range()[-4])
+        self.spinbox_year_4 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_4)
+        self.spinbox_year_4.place(x=225, y=350, anchor='center')
+
+        # create input for profit 4
+        self.entry_profit_4 = ttk.Entry(self)
+        self.entry_profit_4.place(x=425, y=350, anchor='center')
+
+        # create checkbox for year 5
+        self.checkbox_year_5= ttk.Checkbutton(self, onvalue=1, offvalue=0)
+        self.checkbox_year_5.place(x=125, y=400, anchor='center')
+
+        # create input box for year 5
+        self.spinbox_var_5 = tk.IntVar(value=self.create_five_year_range()[-5])
+        self.spinbox_year_5 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_5)
+        self.spinbox_year_5.place(x=225, y=400, anchor='center')
+
+        # create input for profit 5
+        self.entry_profit_5 = ttk.Entry(self)
+        self.entry_profit_5.place(x=425, y=400, anchor='center')
 
     def update_frame(self):
         """
@@ -961,6 +1032,17 @@ class InsertProfitsPage(BasicPage):
         # update sector combobox
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+        self.checkbox_year_1.invoke()
+        self.checkbox_year_2.invoke()
+        self.checkbox_year_3.invoke()
+        self.checkbox_year_4.invoke()
+        self.checkbox_year_5.invoke()
+
+    @staticmethod
+    def create_five_year_range():
+        # TODO: sinnvollen Ort dafür finden
+        return list(range(dt.datetime.now().year - 5, dt.datetime.now().year))
 
 
 
