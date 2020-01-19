@@ -151,10 +151,14 @@ class ShareToolGUI(tk.Tk):
 
         self.menubar.add_cascade(label="Main", menu=self.menu_main)
 
+        # create menu for new data entries
+        self.menu_insert_data = tk.Menu(self.menubar, tearoff=0)
+        self.menu_insert_data.add_command(label="Profits", command=self.menu_bar_open_create_profits)
+
         # create menu for new entries
         self.menu_new = tk.Menu(self.menubar, tearoff=0)
         self.menu_new.add_command(label="Entities", command=self.menu_bar_open_create_entities)
-        self.menu_new.add_command(label="Data", command=self.depends_on_db)
+        self.menu_new.add_cascade(label="Data", menu=self.menu_insert_data)
         self.menubar.add_cascade(label="New", menu=self.menu_new)
 
         # create menu for updating entries
@@ -290,6 +294,23 @@ class ShareToolGUI(tk.Tk):
         else:
             self.create_page(CreateEntitiesPage)
             self.show_frame(CreateEntitiesPage)
+
+    def menu_bar_open_create_profits(self):
+        """tbc"""
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message="Please first ensure the database connection to be established")
+
+        # check whether CreateEntitiesPage exists already
+        elif InsertProfitsPage in self.frames.keys():
+            self.show_frame(InsertProfitsPage)
+
+        # create CreateEntitiesPage if not
+        else:
+            self.create_page(InsertProfitsPage)
+            self.show_frame(InsertProfitsPage)
 
 
 class BasicPage(tk.Frame):
@@ -484,7 +505,7 @@ class StatusPage(BasicPage):
             return False
 
 
-class ConfigDBPage (BasicPage):
+class ConfigDBPage(BasicPage):
     """
     Page allows user to see the current values of the db configuration and change them if required
     """
@@ -632,7 +653,7 @@ class ConfigDBPage (BasicPage):
             controller.show_frame_with_delete(StatusPage, ConfigDBPage)
 
 
-class CreateEntitiesPage (BasicPage):
+class CreateEntitiesPage(BasicPage):
     """
     Page allows user to create new entries for company and share
     """
@@ -898,3 +919,51 @@ class CreateEntitiesPage (BasicPage):
 
     def set_comment(self, comm):
         self.comment = comm
+
+
+class InsertProfitsPage(BasicPage):
+    """
+    tbc
+    """
+
+    def __init__(self, parent, controller):
+
+        super().__init__(parent, controller)
+
+        # ID of modified share
+        self.current_share_id = None
+
+        # data frame for shares
+        self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
+
+        # create heading
+        self.label_heading = ttk.Label(self, text="Insert profits", font=HEADING1_FONT)
+        self.label_heading.place(x=480, y=50, anchor='center')
+
+        # crate label for choosing share
+        self.label_choose_share = ttk.Label(self, text="Pick a share", font=NORMAL_FONT)
+        self.label_choose_share.place(x=350, y=100, anchor='center')
+
+        # create combobox for shares
+        self.combobox_shares = AutocompleteCombobox(self, width=30)
+        self.combobox_shares.place(x=525, y=100, anchor='center')
+
+        # create label for profits
+        self.label_heading_insert_profit = ttk.Label(self, text="Insert profits", font = LARGE_FONT)
+        self.label_heading_insert_profit.place(x=100, y=150, anchor='center')
+
+    def update_frame(self):
+        """
+           update the frame's components
+           :return: None
+        """
+
+        # update sector combobox
+        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
+        self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+
+
+
+    # TODO: check availale years, if year exists show message: please use update
+

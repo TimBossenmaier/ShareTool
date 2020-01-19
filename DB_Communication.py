@@ -154,7 +154,7 @@ def get_total_number_of_shares(sql_cursor):
     """
 
     # read in query string from corresponding file
-    sql_query = open('./data/sql/get_total_number_of_shares.sql','r').read()
+    sql_query = open('./data/sql/get_total_number_of_shares.sql', 'r').read()
 
     # execute query
     sql_cursor.execute(sql_query)
@@ -289,6 +289,31 @@ def get_all_isin(sql_cursor):
         list_isin.append(each_line[0])
 
     return list_isin
+
+
+def get_all_shares(sql_cursor):
+    """
+    query all shares
+    :param sql_cursor: current database cursor
+    :return: returns all shares and their ID as data frame
+    """
+    # TODO: get_all_* zu einer Funktion zusammenfassen
+
+    sql_query = open('./data/sql/get_all_shares.sql', 'r').read()
+
+    sql_cursor.execute(sql_query)
+
+    df_shares = pd.DataFrame(columns=['ID', 'company_name'])
+
+    for each_line in sql_cursor.fetchall():
+
+        key, value = each_line
+
+        df_shares = df_shares.append({'ID': key, 'company_name': value}, ignore_index=True)
+
+    return df_shares
+
+
 
 
 def create_insert_into_statement(table_name, column_names, returning=False):
