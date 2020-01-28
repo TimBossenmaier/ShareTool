@@ -1059,11 +1059,26 @@ class InsertProfitsPage(BasicPage):
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
 
-        self.checkbox_year_1.invoke()
-        self.checkbox_year_2.invoke()
-        self.checkbox_year_3.invoke()
-        self.checkbox_year_4.invoke()
-        self.checkbox_year_5.invoke()
+        # set all checkboxes to be not selected
+        self.checkbox_1_selected.set(False)
+        self.checkbox_2_selected.set(False)
+        self.checkbox_3_selected.set(False)
+        self.checkbox_4_selected.set(False)
+        self.checkbox_5_selected.set(False)
+
+        # clear all entries
+        self.entry_profit_1.delete(0, tk.END)
+        self.entry_profit_2.delete(0, tk.END)
+        self.entry_profit_3.delete(0, tk.END)
+        self.entry_profit_4.delete(0, tk.END)
+        self.entry_profit_5.delete(0, tk.END)
+
+        #
+        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
+        self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
+        self.spinbox_var_3.set(value=self.create_five_year_range()[-3])
+        self.spinbox_var_4.set(value=self.create_five_year_range()[-4])
+        self.spinbox_var_5.set(value=self.create_five_year_range()[-5])
 
     @staticmethod
     def create_five_year_range():
@@ -1205,3 +1220,5 @@ class InsertProfitsPage(BasicPage):
             else:
                 messagebox.showerror("DB Error", "An error has occured. Please try again."
                                                  "In case the error remains, please restart the application")
+
+        #TODO: do some tests/checks
