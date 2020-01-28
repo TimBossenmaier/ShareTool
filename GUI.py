@@ -1072,6 +1072,7 @@ class InsertProfitsPage(BasicPage):
 
     def insert_profits_in_db(self):
 
+        # TODO: try catch IndexError  (nichts ausgewält
         self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
 
         curr_share = self.combobox_shares.get()
@@ -1096,55 +1097,60 @@ class InsertProfitsPage(BasicPage):
                 messagebox.showerror("Missing Profit", "First profit input is empty. \n"
                                                        "Please specify the corresponding profit value or "
                                                        "toggle the checkbox.")
+                errors_detected = True
 
-            if self.checkbox_1_selected.get() and profit_1 != "":
+            if self.checkbox_1_selected.get() and profit_1 != "" and not errors_detected:
                 try:
                     values_to_be_inserted.append((self.spinbox_var_1.get(), float(profit_1)))
                 except ValueError:
                     messagebox.showerror("Value Error", "Please insert a number as profit.")
                     errors_detected = True
 
-            if self.checkbox_2_selected.get() and profit_2 == "":
+            if self.checkbox_2_selected.get() and profit_2 == "" and not errors_detected:
                 messagebox.showerror("Missing Profit", "Second profit input is empty. \n"
                                                        "Please specify the corresponding profit value or "
                                                        "toggle the checkbox.")
+                errors_detected = True
 
-            if self.checkbox_2_selected.get() and profit_2 != "":
+            if self.checkbox_2_selected.get() and profit_2 != "" and not errors_detected:
                 try:
                     values_to_be_inserted.append((self.spinbox_var_2.get(), float(profit_2)))
                 except ValueError:
                     messagebox.showerror("Value Error", "Please insert a number as profit.")
                     errors_detected = True
 
-            if self.checkbox_3_selected.get() and profit_3 == "":
+            if self.checkbox_3_selected.get() and profit_3 == "" and not errors_detected:
                 messagebox.showerror("Missing Profit", "Third profit input is empty. \n"
                                                        "Please specify the corresponding profit value or "
                                                        "toggle the checkbox.")
+                errors_detected = True
 
-            if self.checkbox_3_selected.get() and profit_3 != "":
+            if self.checkbox_3_selected.get() and profit_3 != "" and not errors_detected:
                 try:
                     values_to_be_inserted.append((self.spinbox_var_3.get(), float(profit_3)))
                 except ValueError:
                     messagebox.showerror("Value Error", "Please insert a number as profit.")
                     errors_detected = True
-            if self.checkbox_4_selected.get() and profit_4 == "":
+            if self.checkbox_4_selected.get() and profit_4 == "" and not errors_detected:
                 messagebox.showerror("Missing Profit", "Fourth profit input is empty. \n"
                                                        "Please specify the corresponding profit value or "
                                                        "toggle the checkbox.")
+                errors_detected = True
 
-            if self.checkbox_4_selected.get() and profit_4 != "":
+            if self.checkbox_4_selected.get() and profit_4 != "" and not errors_detected:
                 try:
                     values_to_be_inserted.append((self.spinbox_var_4.get(), float(profit_4)))
                 except ValueError:
                     messagebox.showerror("Value Error", "Please insert a number as profit.")
                     errors_detected = True
 
-            if self.checkbox_5_selected.get() and profit_5 == "":
+            if self.checkbox_5_selected.get() and profit_5 == "" and not errors_detected:
                 messagebox.showerror("Missing Profit", "Fifth profit input is empty. \n"
                                                        "Please specify the corresponding profit value or "
                                                        "toggle the checkbox.")
+                errors_detected = True
 
-            if self.checkbox_5_selected.get() and profit_5 != "":
+            if self.checkbox_5_selected.get() and profit_5 != "" and not errors_detected:
                 try:
                     values_to_be_inserted.append((self.spinbox_var_5.get(), float(profit_5)))
                 except ValueError:
@@ -1160,9 +1166,8 @@ class InsertProfitsPage(BasicPage):
                 messagebox.showerror("Empty Statement", "None of the checkboxes are selected.\n"
                                                         "Accordingly, no values will be inserted.\n"
                                                         "Please select at least once.")
+                errors_detected = True
 
-
-        # TODO: year check
         list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(), "profits",
                                                                             self.current_share_id)
 
@@ -1172,7 +1177,7 @@ class InsertProfitsPage(BasicPage):
             if y in list_existing_years:
                 list_duplicated_years.append(y)
 
-        if len(list_duplicated_years) > 0:
+        if len(list_duplicated_years) > 0 and not errors_detected:
             message_text = "Profits for "
 
             for each_year in list_duplicated_years:
@@ -1193,6 +1198,8 @@ class InsertProfitsPage(BasicPage):
             values_per_entry.update({"profit": [p for y, p in values_to_be_inserted]})
             values_per_entry.update({"valid_from": [ts_curr_time for i in range(len(values_to_be_inserted))]})
             values_per_entry.update({"valid_to": ['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))]})
+
+            # finally perform insert into db
 
 
 
