@@ -1072,10 +1072,16 @@ class InsertProfitsPage(BasicPage):
 
     def insert_profits_in_db(self):
 
-        # TODO: try catch IndexError  (nichts ausgewält
-        self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        errors_detected = False
 
-        curr_share = self.combobox_shares.get()
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror("No selection", "No combobox item selected! \n"
+                                                 "Please select a share to which the profits should refer.")
+            errors_detected = True
+
+        # curr_share = self.combobox_shares.get()
         profit_1 = self.entry_profit_1.get()
         profit_2 = self.entry_profit_2.get()
         profit_3 = self.entry_profit_3.get()
@@ -1084,89 +1090,80 @@ class InsertProfitsPage(BasicPage):
 
         values_to_be_inserted = []
 
-        errors_detected = False
-
-        if curr_share == "":
-
-            messagebox.showerror("Missing Share", "Please select a share from the combobox which refers "
-                                                  "to the entered profits")
+        if self.checkbox_1_selected.get() and profit_1 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "First profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
             errors_detected = True
 
-        else:
-            if self.checkbox_1_selected.get() and profit_1 == "":
-                messagebox.showerror("Missing Profit", "First profit input is empty. \n"
-                                                       "Please specify the corresponding profit value or "
-                                                       "toggle the checkbox.")
+        if self.checkbox_1_selected.get() and profit_1 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_1.get(), float(profit_1)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
                 errors_detected = True
 
-            if self.checkbox_1_selected.get() and profit_1 != "" and not errors_detected:
-                try:
-                    values_to_be_inserted.append((self.spinbox_var_1.get(), float(profit_1)))
-                except ValueError:
-                    messagebox.showerror("Value Error", "Please insert a number as profit.")
-                    errors_detected = True
+        if self.checkbox_2_selected.get() and profit_2 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "Second profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
+            errors_detected = True
 
-            if self.checkbox_2_selected.get() and profit_2 == "" and not errors_detected:
-                messagebox.showerror("Missing Profit", "Second profit input is empty. \n"
-                                                       "Please specify the corresponding profit value or "
-                                                       "toggle the checkbox.")
+        if self.checkbox_2_selected.get() and profit_2 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_2.get(), float(profit_2)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
                 errors_detected = True
 
-            if self.checkbox_2_selected.get() and profit_2 != "" and not errors_detected:
-                try:
-                    values_to_be_inserted.append((self.spinbox_var_2.get(), float(profit_2)))
-                except ValueError:
-                    messagebox.showerror("Value Error", "Please insert a number as profit.")
-                    errors_detected = True
+        if self.checkbox_3_selected.get() and profit_3 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "Third profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
+            errors_detected = True
 
-            if self.checkbox_3_selected.get() and profit_3 == "" and not errors_detected:
-                messagebox.showerror("Missing Profit", "Third profit input is empty. \n"
-                                                       "Please specify the corresponding profit value or "
-                                                       "toggle the checkbox.")
+        if self.checkbox_3_selected.get() and profit_3 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_3.get(), float(profit_3)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
+                errors_detected = True
+        if self.checkbox_4_selected.get() and profit_4 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "Fourth profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
+            errors_detected = True
+
+        if self.checkbox_4_selected.get() and profit_4 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_4.get(), float(profit_4)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
                 errors_detected = True
 
-            if self.checkbox_3_selected.get() and profit_3 != "" and not errors_detected:
-                try:
-                    values_to_be_inserted.append((self.spinbox_var_3.get(), float(profit_3)))
-                except ValueError:
-                    messagebox.showerror("Value Error", "Please insert a number as profit.")
-                    errors_detected = True
-            if self.checkbox_4_selected.get() and profit_4 == "" and not errors_detected:
-                messagebox.showerror("Missing Profit", "Fourth profit input is empty. \n"
-                                                       "Please specify the corresponding profit value or "
-                                                       "toggle the checkbox.")
+        if self.checkbox_5_selected.get() and profit_5 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "Fifth profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
+            errors_detected = True
+
+        if self.checkbox_5_selected.get() and profit_5 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_5.get(), float(profit_5)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
                 errors_detected = True
 
-            if self.checkbox_4_selected.get() and profit_4 != "" and not errors_detected:
-                try:
-                    values_to_be_inserted.append((self.spinbox_var_4.get(), float(profit_4)))
-                except ValueError:
-                    messagebox.showerror("Value Error", "Please insert a number as profit.")
-                    errors_detected = True
+        if not self.checkbox_5_selected.get() and \
+                not self.checkbox_4_selected.get() and \
+                not self.checkbox_3_selected.get() and \
+                not self.checkbox_2_selected.get() and \
+                not self.checkbox_1_selected.get():
 
-            if self.checkbox_5_selected.get() and profit_5 == "" and not errors_detected:
-                messagebox.showerror("Missing Profit", "Fifth profit input is empty. \n"
-                                                       "Please specify the corresponding profit value or "
-                                                       "toggle the checkbox.")
-                errors_detected = True
-
-            if self.checkbox_5_selected.get() and profit_5 != "" and not errors_detected:
-                try:
-                    values_to_be_inserted.append((self.spinbox_var_5.get(), float(profit_5)))
-                except ValueError:
-                    messagebox.showerror("Value Error", "Please insert a number as profit.")
-                    errors_detected = True
-
-            if not self.checkbox_5_selected.get() and \
-                    not self.checkbox_4_selected.get() and \
-                    not self.checkbox_3_selected.get() and \
-                    not self.checkbox_2_selected.get() and \
-                    not self.checkbox_1_selected.get():
-
-                messagebox.showerror("Empty Statement", "None of the checkboxes are selected.\n"
-                                                        "Accordingly, no values will be inserted.\n"
-                                                        "Please select at least once.")
-                errors_detected = True
+            messagebox.showerror("Empty Statement", "None of the checkboxes are selected.\n"
+                                                    "Accordingly, no values will be inserted.\n"
+                                                    "Please select at least once.")
+            errors_detected = True
 
         list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(), "profits",
                                                                             self.current_share_id)
