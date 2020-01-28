@@ -277,7 +277,7 @@ def get_all_isin(sql_cursor):
     """
     # TODO: get_all_* zu einer Funktion zusammenfassen
 
-    sql_query = 'SELECT isin FROM entities.shares'
+    sql_query = 'SELECT shares FROM entities.shares'
 
     sql_cursor.execute(sql_query)
 
@@ -324,7 +324,7 @@ def get_years_for_specific_share(sql_cursor, table, share_id):
     """
 
     sql_query = 'SELECT tab.year FROM entities.shares share ' \
-                'JOIN data.' + table + ' tab on tab."share_ID" = share."ID" ' \
+                'INNER JOIN data.' + table + ' tab on tab."share_ID" = share."ID" ' \
                 'WHERE share."ID" = ' + str(share_id)
 
     sql_cursor.execute(sql_query)
@@ -350,7 +350,7 @@ def create_insert_into_statement(table_name, column_names, returning=False):
     query_string = "INSERT INTO " + table_schema_relation[table_name] + "." + table_name + " ("
 
     # iterate over the columns
-    for column, i in zip(column_names, range(1, len(column_names) + 1 )):
+    for column, i in zip(column_names, range(1, len(column_names) + 1)):
 
         # append column name in quotes
         query_string += '"' + column + '"'
@@ -427,5 +427,3 @@ def insert_share(db_connection, values):
         error_message = e
 
     return error_message
-
-
