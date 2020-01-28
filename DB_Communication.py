@@ -427,3 +427,37 @@ def insert_share(db_connection, values):
         error_message = e
 
     return error_message
+
+
+def insert_profits(db_connection, values):
+    """
+
+    :param db_connection:
+    :param values:
+    :return:
+    """
+
+    # TODO: combine all insert methods to one
+
+    error_message = None
+    try:
+        sql_cursor = db_connection.cursor()
+
+        column_names = get_column_names_from_db_table(sql_cursor, "profits")
+
+        # remove ID as this is generated automatically by the database
+        column_names.remove("ID")
+
+        query = create_insert_into_statement("profits", column_names)
+        print(values["year"])
+        for i in range(len(values["year"])):
+            sql_cursor.execute(query, (values["year"][i], values["share_ID"][i], values["profit"][i],
+                                       values["valid_from"][i], values["valid_to"][i]))
+
+        db_connection.commit()
+
+    except BaseException as e:
+        error_message = e
+
+    return error_message
+

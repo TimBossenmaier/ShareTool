@@ -877,7 +877,7 @@ class CreateEntitiesPage(BasicPage):
                     messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
                 else:
                     messagebox.showerror("DB Error", "An error has occured. Please try again."
-                                                     " In case the error remains, please restart the application")
+                                                     "In case the error remains, please restart the application")
         elif is_isin_valid(isin) is not None:
             messagebox.showerror("Invalid ISIN", "The entered ISIN is well-formated but invalid. \n"
                                                  "Please change it.")
@@ -1035,7 +1035,7 @@ class InsertProfitsPage(BasicPage):
         self.text_info_profit.insert(tk.INSERT, "Profit describes the financial bene- \n"
                                                 "fit realized when revenue generated \n"
                                                 "from a business activity exceeds the \n"
-                                                " xpenses, costs, and taxes involved \n"
+                                                "expenses, costs, and taxes involved \n"
                                                 "in sustaining the activity in question. \n"
                                                 "Any profits earned funnel back to \n "
                                                 "business owners, who choose to \n"
@@ -1190,16 +1190,18 @@ class InsertProfitsPage(BasicPage):
 
             ts_curr_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            values_per_entry.update({"year": [y for y, p in values_to_be_inserted]})
-            values_per_entry.update({"share_ID": [self.current_share_id for i in range(len(values_to_be_inserted))]})
-            values_per_entry.update({"profit": [p for y, p in values_to_be_inserted]})
-            values_per_entry.update({"valid_from": [ts_curr_time for i in range(len(values_to_be_inserted))]})
-            values_per_entry.update({"valid_to": ['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))]})
+            values_per_entry.update({"year": list([y for y, p in values_to_be_inserted])})
+            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))])})
+            values_per_entry.update({"profit": list([p for y, p in values_to_be_inserted])})
+            values_per_entry.update({"valid_from": list([ts_curr_time for i in range(len(values_to_be_inserted))])})
+            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))])})
 
             # finally perform insert into db
+            error = DB_Communication.insert_profits(self.db_connection, values_per_entry)
 
-
-
-
-
-            # TODO: implement DB Connection
+            if error is None:
+                self.update_frame()
+                messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
+            else:
+                messagebox.showerror("DB Error", "An error has occured. Please try again."
+                                                 "In case the error remains, please restart the application")
