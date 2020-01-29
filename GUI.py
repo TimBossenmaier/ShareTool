@@ -1093,17 +1093,20 @@ class InsertProfitsPage(BasicPage):
             errors_detected = True
 
         if not errors_detected:
+
+            existing_profits = ""
+
             list_profits = DB_Communication.get_profits_for_specific_share(self.db_connection.cursor(),
                                                                            self.current_share_id)
-            existing_profits = ""
-            for each_profit in list_profits:
-                year, profit = each_profit
+            if len(list_profits) > 0:
+                for each_profit in list_profits:
+                    year, profit = each_profit
 
-                existing_profits += str(year) + ": " + str(profit) + "\n"
+                    existing_profits += str(year) + ": " + str(profit) + "\n"
+            else:
+                existing_profits = "No profits available so far"
 
             self.scrolledtext_profits.insert(tk.INSERT, existing_profits)
-
-
 
     def insert_profits_in_db(self):
 
