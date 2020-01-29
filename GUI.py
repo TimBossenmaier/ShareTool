@@ -1028,22 +1028,15 @@ class InsertProfitsPage(BasicPage):
         self.entry_profit_5 = ttk.Entry(self)
         self.entry_profit_5.place(x=425, y=400, anchor='center')
 
-        # create info box profit
-        self.heading_info_profit = ttk.Label(self, text="What is profit?", font=LARGE_FONT)
-        self.heading_info_profit.place(x=750, y=150, anchor='center')
-        self.text_info_profit = tk.Text(self, font=("Open Sans", 10, "italic"), width=32, height=11)
-        self.text_info_profit.insert(tk.INSERT, "Profit describes the financial bene- \n"
-                                                "fit realized when revenue generated \n"
-                                                "from a business activity exceeds the \n"
-                                                "expenses, costs, and taxes involved \n"
-                                                "in sustaining the activity in question. \n"
-                                                "Any profits earned funnel back to \n "
-                                                "business owners, who choose to \n"
-                                                "either pocket the cash or reinvest \n"
-                                                "it back into the business. Profit is \n"
-                                                "calculated as total revenue less \n"
-                                                "total expenses.")
-        self.text_info_profit.place(x=750, y=300, anchor='center')
+        # create button for existing profits
+        self.button_existing_profits = ttk.Button(self, text="Show existing profits")
+        self.button_existing_profits.place(x=750, y=100, anchor='center')
+
+        # create text box for existing profits
+        self.heading_existing_profits = ttk.Label(self, text="Existing profits", font=LARGE_FONT)
+        self.heading_existing_profits.place(x=700, y=175, anchor='center')
+        self.scrolledtext_profits = ScrolledText(self, width=25, height=11, wrap='word')
+        self.scrolledtext_profits.place(x=750, y=300, anchor='center')
 
         # create insert button
         self.button_insert_profits = ttk.Button(self, text="Insert profits", command=self.insert_profits_in_db)
@@ -1173,7 +1166,8 @@ class InsertProfitsPage(BasicPage):
                 not self.checkbox_4_selected.get() and \
                 not self.checkbox_3_selected.get() and \
                 not self.checkbox_2_selected.get() and \
-                not self.checkbox_1_selected.get():
+                not self.checkbox_1_selected.get() and \
+                not errors_detected:
 
             messagebox.showerror("Empty Statement", "None of the checkboxes are selected.\n"
                                                     "Accordingly, no values will be inserted.\n"
@@ -1222,3 +1216,4 @@ class InsertProfitsPage(BasicPage):
                                                  "In case the error remains, please restart the application")
 
         #TODO: do some tests/checks
+        # TODO: prettify code and comment -> merge branches
