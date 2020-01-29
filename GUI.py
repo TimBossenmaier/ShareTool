@@ -1281,3 +1281,15 @@ class InsertCashflowPage(BasicPage):
     """
 
     def __init__(self, parent, controller):
+
+        super().__init__(parent, controller)
+
+        # id of modified share
+        self.current_share_id = 0
+
+        # data frame for shares
+        self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
+
+        # create heading
+        self.label_heading = ttk.Label(self, text="Insert cashflow", font=HEADING1_FONT)
+        self.label_heading.place(x=480, y=50, anchor='center')
