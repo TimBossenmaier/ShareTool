@@ -1273,3 +1273,11 @@ class InsertProfitsPage(BasicPage):
             else:
                 messagebox.showerror("DB Error", "An error has occured. Please try again."
                                                  "In case the error remains, please restart the application")
+
+
+class InsertCashflowPage(BasicPage):
+    """
+    Page allows user to create a new cashflow entry for a specific share
+    """
+
+    def __init__(self, parent, controller):
