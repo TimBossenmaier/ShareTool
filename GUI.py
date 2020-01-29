@@ -154,6 +154,7 @@ class ShareToolGUI(tk.Tk):
 
         # create menu for new data entries
         self.menu_insert_data = tk.Menu(self.menubar, tearoff=0)
+        self.menu_insert_data.add_command(label="Cashflow", command=self.menu_bar_open_create_cashflows)
         self.menu_insert_data.add_command(label="Profits", command=self.menu_bar_open_create_profits)
 
         # create menu for new entries
@@ -297,21 +298,46 @@ class ShareToolGUI(tk.Tk):
             self.show_frame(CreateEntitiesPage)
 
     def menu_bar_open_create_profits(self):
-        """tbc"""
+        """
+        Opens a frame allowing the user to create new profit entries
+        Creates page as well if required
+        :return: None
+        """
 
         # db_connection is prerequisite for this page
         if self.db_connection is None:
             messagebox.showinfo(title='Not possible yet!',
                                 message="Please first ensure the database connection to be established")
 
-        # check whether CreateEntitiesPage exists already
+        # check whether InsertProfitsPage exists already
         elif InsertProfitsPage in self.frames.keys():
             self.show_frame(InsertProfitsPage)
 
-        # create CreateEntitiesPage if not
+        # create InsertProfitsPage if not
         else:
             self.create_page(InsertProfitsPage)
             self.show_frame(InsertProfitsPage)
+
+    def menu_bar_open_create_cashflows(self):
+        """
+        Opens a frame allowing the user to create new profit entries
+        Creates page as well if required
+        :return: None
+        """
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message="Please first ensure the database connection to be established")
+
+        # check whether InsertCashflowPage exists already
+        elif InsertCashflowPage in self.frames.keys():
+            self.show_frame(InsertCashflowPage)
+
+        # create InsertCashflowPage if not
+        else:
+            self.create_page(InsertCashflowPage)
+            self.show_frame(InsertCashflowPage)
 
 
 class BasicPage(tk.Frame):
