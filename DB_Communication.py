@@ -316,7 +316,7 @@ def get_all_shares(sql_cursor):
 
 def get_years_for_specific_share(sql_cursor, table, share_id):
     """
-
+    tbc
     :param sql_cursor:
     :param table:
     :param share_id:
@@ -337,6 +337,28 @@ def get_years_for_specific_share(sql_cursor, table, share_id):
 
     return list_years
 
+def get_profits_for_specific_share(sql_cursor, share_id):
+    """
+    tbc
+    :param sql_cursor:
+    :param table:
+    :param share_id:
+    :return:
+    """
+
+    sql_query = 'SELECT tab.year, tab.profit FROM entities.shares share ' \
+                'INNER JOIN data.profits tab on tab."share_ID" = share."ID" ' \
+                'WHERE share."ID" = ' + str(share_id)
+
+    sql_cursor.execute(sql_query)
+
+    list_years = []
+
+    for each_line in sql_cursor.fetchall():
+
+        list_years.append(each_line)
+
+    return list_years
 
 def create_insert_into_statement(table_name, column_names, returning=False):
     """
@@ -449,7 +471,7 @@ def insert_profits(db_connection, values):
         column_names.remove("ID")
 
         query = create_insert_into_statement("profits", column_names)
-        print(values["year"])
+
         for i in range(len(values["year"])):
             sql_cursor.execute(query, (values["year"][i], values["share_ID"][i], values["profit"][i],
                                        values["valid_from"][i], values["valid_to"][i]))
