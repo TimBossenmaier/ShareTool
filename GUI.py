@@ -1074,6 +1074,9 @@ class InsertProfitsPage(BasicPage):
         self.spinbox_var_4.set(value=self.create_five_year_range()[-4])
         self.spinbox_var_5.set(value=self.create_five_year_range()[-5])
 
+        # reset scrolledtext
+        self.scrolledtext_profits.delete('1.0', tk.END)
+
     @staticmethod
     def create_five_year_range():
         # TODO: sinnvollen Ort dafür finden
