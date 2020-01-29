@@ -154,7 +154,7 @@ def get_total_number_of_shares(sql_cursor):
     """
 
     # read in query string from corresponding file
-    sql_query = open('./data/sql/get_total_number_of_shares.sql','r').read()
+    sql_query = open('./data/sql/get_total_number_of_shares.sql', 'r').read()
 
     # execute query
     sql_cursor.execute(sql_query)
@@ -277,7 +277,7 @@ def get_all_isin(sql_cursor):
     """
     # TODO: get_all_* zu einer Funktion zusammenfassen
 
-    sql_query = 'SELECT isin FROM entities.shares'
+    sql_query = 'SELECT shares FROM entities.shares'
 
     sql_cursor.execute(sql_query)
 
@@ -289,6 +289,76 @@ def get_all_isin(sql_cursor):
         list_isin.append(each_line[0])
 
     return list_isin
+
+
+def get_all_shares(sql_cursor):
+    """
+    query all shares
+    :param sql_cursor: current database cursor
+    :return: returns all shares and their ID as data frame
+    """
+    # TODO: get_all_* zu einer Funktion zusammenfassen
+
+    sql_query = open('./data/sql/get_all_shares.sql', 'r').read()
+
+    sql_cursor.execute(sql_query)
+
+    df_shares = pd.DataFrame(columns=['ID', 'company_name'])
+
+    for each_line in sql_cursor.fetchall():
+
+        key, value = each_line
+
+        df_shares = df_shares.append({'ID': key, 'company_name': value}, ignore_index=True)
+
+    return df_shares
+
+
+def get_years_for_specific_share(sql_cursor, table, share_id):
+    """
+    Get all years which already exist for the given share_id in the given table
+    :param sql_cursor:  current database cursor
+    :param table: database table to be queried
+    :param share_id: share_id to be queried
+    :return: list of existing years
+    """
+
+    sql_query = 'SELECT tab.year FROM entities.shares share ' \
+                'INNER JOIN data.' + table + ' tab on tab."share_ID" = share."ID" ' \
+                'WHERE share."ID" = ' + str(share_id)
+
+    sql_cursor.execute(sql_query)
+
+    list_years = []
+
+    for each_line in sql_cursor.fetchall():
+
+        list_years.append(each_line[0])
+
+    return list_years
+
+
+def get_profits_for_specific_share(sql_cursor, share_id):
+    """
+    Get all existing profit values and years for the given share
+    :param sql_cursor: current sql cursor
+    :param share_id: id of share to be queried
+    :return:
+    """
+
+    sql_query = 'SELECT tab.year, tab.profit FROM entities.shares share ' \
+                'INNER JOIN data.profits tab on tab."share_ID" = share."ID" ' \
+                'WHERE share."ID" = ' + str(share_id)
+
+    sql_cursor.execute(sql_query)
+
+    list_years = []
+
+    for each_line in sql_cursor.fetchall():
+
+        list_years.append(each_line)
+
+    return list_years
 
 
 def create_insert_into_statement(table_name, column_names, returning=False):
@@ -303,7 +373,7 @@ def create_insert_into_statement(table_name, column_names, returning=False):
     query_string = "INSERT INTO " + table_schema_relation[table_name] + "." + table_name + " ("
 
     # iterate over the columns
-    for column, i in zip(column_names, range(1, len(column_names) + 1 )):
+    for column, i in zip(column_names, range(1, len(column_names) + 1)):
 
         # append column name in quotes
         query_string += '"' + column + '"'
@@ -380,3 +450,37 @@ def insert_share(db_connection, values):
         error_message = e
 
     return error_message
+
+
+def insert_profits(db_connection, values):
+    """
+    Performs insert statement of profit entries
+    :param db_connection: psycopg2 connection to database
+    :param values: dictionary of values to be integrated in the statement
+    :return: error message
+    """
+
+    # TODO: combine all insert methods to one
+
+    error_message = None
+    try:
+        sql_cursor = db_connection.cursor()
+
+        column_names = get_column_names_from_db_table(sql_cursor, "profits")
+
+        # remove ID as this is generated automatically by the database
+        column_names.remove("ID")
+
+        query = create_insert_into_statement("profits", column_names)
+
+        for i in range(len(values["year"])):
+            sql_cursor.execute(query, (values["year"][i], values["share_ID"][i], values["profit"][i],
+                                       values["valid_from"][i], values["valid_to"][i]))
+
+        db_connection.commit()
+
+    except BaseException as e:
+        error_message = e
+
+    return error_message
+

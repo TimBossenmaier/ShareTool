@@ -6,6 +6,7 @@ import DB_Communication
 from PIL import ImageTk
 import json
 import pandas as pd
+import datetime as dt
 
 # Define some fonts
 HEADING1_FONT = ("Open Sans", 16, "bold")
@@ -151,10 +152,14 @@ class ShareToolGUI(tk.Tk):
 
         self.menubar.add_cascade(label="Main", menu=self.menu_main)
 
+        # create menu for new data entries
+        self.menu_insert_data = tk.Menu(self.menubar, tearoff=0)
+        self.menu_insert_data.add_command(label="Profits", command=self.menu_bar_open_create_profits)
+
         # create menu for new entries
         self.menu_new = tk.Menu(self.menubar, tearoff=0)
         self.menu_new.add_command(label="Entities", command=self.menu_bar_open_create_entities)
-        self.menu_new.add_command(label="Data", command=self.depends_on_db)
+        self.menu_new.add_cascade(label="Data", menu=self.menu_insert_data)
         self.menubar.add_cascade(label="New", menu=self.menu_new)
 
         # create menu for updating entries
@@ -213,7 +218,7 @@ class ShareToolGUI(tk.Tk):
         frame.tkraise()
 
         # delete the old page
-        del(self.frames[old_page])
+        del (self.frames[old_page])
 
     def create_page(self, page):
         """
@@ -290,6 +295,23 @@ class ShareToolGUI(tk.Tk):
         else:
             self.create_page(CreateEntitiesPage)
             self.show_frame(CreateEntitiesPage)
+
+    def menu_bar_open_create_profits(self):
+        """tbc"""
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message="Please first ensure the database connection to be established")
+
+        # check whether CreateEntitiesPage exists already
+        elif InsertProfitsPage in self.frames.keys():
+            self.show_frame(InsertProfitsPage)
+
+        # create CreateEntitiesPage if not
+        else:
+            self.create_page(InsertProfitsPage)
+            self.show_frame(InsertProfitsPage)
 
 
 class BasicPage(tk.Frame):
@@ -484,7 +506,7 @@ class StatusPage(BasicPage):
             return False
 
 
-class ConfigDBPage (BasicPage):
+class ConfigDBPage(BasicPage):
     """
     Page allows user to see the current values of the db configuration and change them if required
     """
@@ -632,7 +654,7 @@ class ConfigDBPage (BasicPage):
             controller.show_frame_with_delete(StatusPage, ConfigDBPage)
 
 
-class CreateEntitiesPage (BasicPage):
+class CreateEntitiesPage(BasicPage):
     """
     Page allows user to create new entries for company and share
     """
@@ -855,13 +877,13 @@ class CreateEntitiesPage (BasicPage):
                     messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
                 else:
                     messagebox.showerror("DB Error", "An error has occured. Please try again."
-                                                     " In case the error remains, please restart the application")
+                                                     "In case the error remains, please restart the application")
         elif is_isin_valid(isin) is not None:
             messagebox.showerror("Invalid ISIN", "The entered ISIN is well-formated but invalid. \n"
-                                 "Please change it.")
+                                                 "Please change it.")
         else:
             messagebox.showerror("Format Error ISIN", "The entered ISIN does not meet the expected format. \n"
-                                 "Please try again.")
+                                                      "Please try again.")
 
     def create_comment_dialog(self):
         """
@@ -898,3 +920,356 @@ class CreateEntitiesPage (BasicPage):
 
     def set_comment(self, comm):
         self.comment = comm
+
+
+class InsertProfitsPage(BasicPage):
+    """
+     Page allows user to create new profit entries for a specific share
+    """
+
+    def __init__(self, parent, controller):
+
+        super().__init__(parent, controller)
+
+        # ID of modified share
+        self.current_share_id = 0
+
+        # data frame for shares
+        self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
+
+        # create heading
+        self.label_heading = ttk.Label(self, text="Insert profits", font=HEADING1_FONT)
+        self.label_heading.place(x=480, y=50, anchor='center')
+
+        # crate label for choosing share
+        self.label_choose_share = ttk.Label(self, text="Pick a share", font=NORMAL_FONT)
+        self.label_choose_share.place(x=350, y=100, anchor='center')
+
+        # create combobox for shares
+        self.combobox_shares = AutocompleteCombobox(self, width=30)
+        self.combobox_shares.place(x=525, y=100, anchor='center')
+
+        # create label for profits
+        self.label_heading_insert_profit = ttk.Label(self, text="Insert profits", font=LARGE_FONT)
+        self.label_heading_insert_profit.place(x=100, y=150, anchor='center')
+
+        # create checkbox for first year
+        self.checkbox_1_selected = tk.BooleanVar()
+        self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
+        self.checkbox_year_1.place(x=125, y=200, anchor='center')
+
+        # create input box for year 1
+        self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_1)
+        self.spinbox_year_1.place(x=225, y=200, anchor='center')
+
+        # create input for profit 1
+        self.entry_profit_1 = ttk.Entry(self)
+        self.entry_profit_1.place(x=425, y=200, anchor='center')
+
+        # create checkbox for year 2
+        self.checkbox_2_selected = tk.BooleanVar()
+        self.checkbox_year_2 = ttk.Checkbutton(self, var=self.checkbox_2_selected)
+        self.checkbox_year_2.place(x=125, y=250, anchor='center')
+
+        # create input box for year 2
+        self.spinbox_var_2 = tk.IntVar(value=self.create_five_year_range()[-2])
+        self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_2)
+        self.spinbox_year_2.place(x=225, y=250, anchor='center')
+
+        # create input for profit 2
+        self.entry_profit_2 = ttk.Entry(self)
+        self.entry_profit_2.place(x=425, y=250, anchor='center')
+
+        # create checkbox for year 3
+        self.checkbox_3_selected = tk.BooleanVar()
+        self.checkbox_year_3 = ttk.Checkbutton(self, var=self.checkbox_3_selected)
+        self.checkbox_year_3.place(x=125, y=300, anchor='center')
+
+        # create input box for year 3
+        self.spinbox_var_3 = tk.IntVar(value=self.create_five_year_range()[-3])
+        self.spinbox_year_3 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_3)
+        self.spinbox_year_3.place(x=225, y=300, anchor='center')
+
+        # create input for profit 3
+        self.entry_profit_3 = ttk.Entry(self)
+        self.entry_profit_3.place(x=425, y=300, anchor='center')
+
+        # create checkbox for year 4
+        self.checkbox_4_selected = tk.BooleanVar()
+        self.checkbox_year_4 = ttk.Checkbutton(self, var=self.checkbox_4_selected)
+        self.checkbox_year_4.place(x=125, y=350, anchor='center')
+
+        # create input box for year 4
+        self.spinbox_var_4 = tk.IntVar(value=self.create_five_year_range()[-4])
+        self.spinbox_year_4 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_4)
+        self.spinbox_year_4.place(x=225, y=350, anchor='center')
+
+        # create input for profit 4
+        self.entry_profit_4 = ttk.Entry(self)
+        self.entry_profit_4.place(x=425, y=350, anchor='center')
+
+        # create checkbox for year 5
+        self.checkbox_5_selected = tk.BooleanVar()
+        self.checkbox_year_5 = ttk.Checkbutton(self, var=self.checkbox_5_selected)
+        self.checkbox_year_5.place(x=125, y=400, anchor='center')
+
+        # create input box for year 5
+        self.spinbox_var_5 = tk.IntVar(value=self.create_five_year_range()[-5])
+        self.spinbox_year_5 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_5)
+        self.spinbox_year_5.place(x=225, y=400, anchor='center')
+
+        # create input for profit 5
+        self.entry_profit_5 = ttk.Entry(self)
+        self.entry_profit_5.place(x=425, y=400, anchor='center')
+
+        # create button for existing profits
+        self.button_existing_profits = ttk.Button(self, text="Show existing profits",
+                                                  command=self.collect_existing_profits)
+        self.button_existing_profits.place(x=750, y=100, anchor='center')
+
+        # create text box for existing profits
+        self.heading_existing_profits = ttk.Label(self, text="Existing profits", font=LARGE_FONT)
+        self.heading_existing_profits.place(x=700, y=175, anchor='center')
+        self.scrolledtext_profits = ScrolledText(self, width=25, height=11, wrap='word')
+        self.scrolledtext_profits.place(x=750, y=300, anchor='center')
+
+        # create insert button
+        self.button_insert_profits = ttk.Button(self, text="Insert profits", command=self.insert_profits_in_db)
+        self.button_insert_profits.place(x=480, y=475, anchor='center')
+
+    def update_frame(self):
+        """
+           update the frame's components
+           :return: None
+        """
+
+        # update sector combobox
+        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
+        self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+        # set all checkboxes to be not selected
+        self.checkbox_1_selected.set(True)
+        self.checkbox_2_selected.set(True)
+        self.checkbox_3_selected.set(True)
+        self.checkbox_4_selected.set(True)
+        self.checkbox_5_selected.set(True)
+
+        # clear all entries
+        self.entry_profit_1.delete(0, tk.END)
+        self.entry_profit_2.delete(0, tk.END)
+        self.entry_profit_3.delete(0, tk.END)
+        self.entry_profit_4.delete(0, tk.END)
+        self.entry_profit_5.delete(0, tk.END)
+
+        # reset all spinboxes
+        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
+        self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
+        self.spinbox_var_3.set(value=self.create_five_year_range()[-3])
+        self.spinbox_var_4.set(value=self.create_five_year_range()[-4])
+        self.spinbox_var_5.set(value=self.create_five_year_range()[-5])
+
+        # reset scrolledtext
+        self.scrolledtext_profits.delete('1.0', tk.END)
+
+    @staticmethod
+    def create_five_year_range():
+        # TODO: sinnvollen Ort dafür finden
+        return list(range(dt.datetime.now().year - 5, dt.datetime.now().year))
+
+    def collect_existing_profits(self):
+        """
+        Get existing profit instances for the current share and display it in the corresponding scrolled text
+        :return: None
+        """
+
+        # clear text
+        self.scrolledtext_profits.delete('1.0', tk.END)
+
+        errors_detected = False
+
+        # get current share id from combobox
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror("No selection", "No combobox item selected! \n"
+                                                 "Please select a share to which the profits should refer.")
+            errors_detected = True
+
+        if not errors_detected:
+
+            existing_profits = ""
+
+            # get tuples for year and profit for the current share as a list
+            list_profits = DB_Communication.get_profits_for_specific_share(self.db_connection.cursor(),
+                                                                           self.current_share_id)
+            # create text according to query results
+            if len(list_profits) > 0:
+                for each_profit in list_profits:
+                    year, profit = each_profit
+
+                    existing_profits += str(year) + ": " + str(profit) + "\n"
+            else:
+                existing_profits = "No profits available so far"
+
+            # display text in text box
+            self.scrolledtext_profits.insert(tk.INSERT, existing_profits)
+
+    def insert_profits_in_db(self):
+        """
+        Perform several validity checks for the user input.
+        If no errors are detected, create the inserted profit values in the database
+        :return: None
+        """
+
+        errors_detected = False
+
+        # get current share id from combobox
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror("No selection", "No combobox item selected! \n"
+                                                 "Please select a share to which the profits should refer.")
+            errors_detected = True
+
+        # get all inserted profit values
+        profit_1 = self.entry_profit_1.get()
+        profit_2 = self.entry_profit_2.get()
+        profit_3 = self.entry_profit_3.get()
+        profit_4 = self.entry_profit_4.get()
+        profit_5 = self.entry_profit_5.get()
+
+        values_to_be_inserted = []
+
+        # control for each checkbox whether inputs are valid and consistent
+        # - if a checkbox is selected, the corresponding profit have to be stated
+        # - the inserted profit has to be a float
+        if self.checkbox_1_selected.get() and profit_1 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "First profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
+            errors_detected = True
+
+        if self.checkbox_1_selected.get() and profit_1 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_1.get(), float(profit_1)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
+                errors_detected = True
+
+        if self.checkbox_2_selected.get() and profit_2 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "Second profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
+            errors_detected = True
+
+        if self.checkbox_2_selected.get() and profit_2 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_2.get(), float(profit_2)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
+                errors_detected = True
+
+        if self.checkbox_3_selected.get() and profit_3 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "Third profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
+            errors_detected = True
+
+        if self.checkbox_3_selected.get() and profit_3 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_3.get(), float(profit_3)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
+                errors_detected = True
+        if self.checkbox_4_selected.get() and profit_4 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "Fourth profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
+            errors_detected = True
+
+        if self.checkbox_4_selected.get() and profit_4 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_4.get(), float(profit_4)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
+                errors_detected = True
+
+        if self.checkbox_5_selected.get() and profit_5 == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "Fifth profit input is empty. \n"
+                                                   "Please specify the corresponding profit value or "
+                                                   "toggle the checkbox.")
+            errors_detected = True
+
+        if self.checkbox_5_selected.get() and profit_5 != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_5.get(), float(profit_5)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
+                errors_detected = True
+
+        # show message if none of the checkboxes is selected
+        if not self.checkbox_5_selected.get() and \
+                not self.checkbox_4_selected.get() and \
+                not self.checkbox_3_selected.get() and \
+                not self.checkbox_2_selected.get() and \
+                not self.checkbox_1_selected.get() and \
+                not errors_detected:
+
+            messagebox.showerror("Empty Statement", "None of the checkboxes are selected.\n"
+                                                    "Accordingly, no values will be inserted.\n"
+                                                    "Please select at least once.")
+            errors_detected = True
+
+        # get list of years for which profit values are already in the database
+        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(), "profits",
+                                                                            self.current_share_id)
+
+        list_duplicated_years = []
+
+        # catch each year which has already a profit value
+        for y, p in values_to_be_inserted:
+            if y in list_existing_years:
+                list_duplicated_years.append(y)
+
+        # show message which years are already existent
+        if len(list_duplicated_years) > 0 and not errors_detected:
+            message_text = "Profits for "
+
+            for each_year in list_duplicated_years:
+                message_text += str(each_year) + " "
+
+            message_text += "already exist. \nPlease use Update section to change the values."
+            messagebox.showerror("Year(s) exist already", message_text)
+            errors_detected = True
+
+        values_per_entry = {}
+
+        # if so far no errors are found, we can insert the values in the database
+        if not errors_detected:
+
+            ts_curr_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # create a dictionary with all values for each year
+            values_per_entry.update({"year": list([y for y, p in values_to_be_inserted])})
+            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
+                                                       ])})
+            values_per_entry.update({"profit": list([p for y, p in values_to_be_inserted])})
+            values_per_entry.update({"valid_from": list([ts_curr_time for i in range(len(values_to_be_inserted))])})
+            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
+                                                       ])})
+
+            # finally perform insert into db
+            error = DB_Communication.insert_profits(self.db_connection, values_per_entry)
+
+            if error is None:
+                self.update_frame()
+                messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
+            else:
+                messagebox.showerror("DB Error", "An error has occured. Please try again."
+                                                 "In case the error remains, please restart the application")
