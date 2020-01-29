@@ -1054,11 +1054,11 @@ class InsertProfitsPage(BasicPage):
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
 
         # set all checkboxes to be not selected
-        self.checkbox_1_selected.set(False)
-        self.checkbox_2_selected.set(False)
-        self.checkbox_3_selected.set(False)
-        self.checkbox_4_selected.set(False)
-        self.checkbox_5_selected.set(False)
+        self.checkbox_1_selected.set(True)
+        self.checkbox_2_selected.set(True)
+        self.checkbox_3_selected.set(True)
+        self.checkbox_4_selected.set(True)
+        self.checkbox_5_selected.set(True)
 
         # clear all entries
         self.entry_profit_1.delete(0, tk.END)
