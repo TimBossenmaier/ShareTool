@@ -1029,7 +1029,8 @@ class InsertProfitsPage(BasicPage):
         self.entry_profit_5.place(x=425, y=400, anchor='center')
 
         # create button for existing profits
-        self.button_existing_profits = ttk.Button(self, text="Show existing profits")
+        self.button_existing_profits = ttk.Button(self, text="Show existing profits",
+                                                  command=self.collect_existing_profits)
         self.button_existing_profits.place(x=750, y=100, anchor='center')
 
         # create text box for existing profits
@@ -1066,7 +1067,7 @@ class InsertProfitsPage(BasicPage):
         self.entry_profit_4.delete(0, tk.END)
         self.entry_profit_5.delete(0, tk.END)
 
-        #
+        # reset all spinboxes
         self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
         self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
         self.spinbox_var_3.set(value=self.create_five_year_range()[-3])
@@ -1077,6 +1078,32 @@ class InsertProfitsPage(BasicPage):
     def create_five_year_range():
         # TODO: sinnvollen Ort dafür finden
         return list(range(dt.datetime.now().year - 5, dt.datetime.now().year))
+
+    def collect_existing_profits(self):
+
+        self.scrolledtext_profits.delete('1.0', tk.END)
+
+        errors_detected = False
+
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror("No selection", "No combobox item selected! \n"
+                                                 "Please select a share to which the profits should refer.")
+            errors_detected = True
+
+        if not errors_detected:
+            list_profits = DB_Communication.get_profits_for_specific_share(self.db_connection.cursor(),
+                                                                           self.current_share_id)
+            existing_profits = ""
+            for each_profit in list_profits:
+                year, profit = each_profit
+
+                existing_profits += str(year) + ": " + str(profit) + "\n"
+
+            self.scrolledtext_profits.insert(tk.INSERT, existing_profits)
+
+
 
     def insert_profits_in_db(self):
 
