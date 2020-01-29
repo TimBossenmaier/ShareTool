@@ -316,11 +316,11 @@ def get_all_shares(sql_cursor):
 
 def get_years_for_specific_share(sql_cursor, table, share_id):
     """
-    tbc
-    :param sql_cursor:
-    :param table:
-    :param share_id:
-    :return:
+    Get all years which already exist for the given share_id in the given table
+    :param sql_cursor:  current database cursor
+    :param table: database table to be queried
+    :param share_id: share_id to be queried
+    :return: list of existing years
     """
 
     sql_query = 'SELECT tab.year FROM entities.shares share ' \
@@ -337,12 +337,12 @@ def get_years_for_specific_share(sql_cursor, table, share_id):
 
     return list_years
 
+
 def get_profits_for_specific_share(sql_cursor, share_id):
     """
-    tbc
-    :param sql_cursor:
-    :param table:
-    :param share_id:
+    Get all existing profit values and years for the given share
+    :param sql_cursor: current sql cursor
+    :param share_id: id of share to be queried
     :return:
     """
 
@@ -359,6 +359,7 @@ def get_profits_for_specific_share(sql_cursor, share_id):
         list_years.append(each_line)
 
     return list_years
+
 
 def create_insert_into_statement(table_name, column_names, returning=False):
     """
@@ -453,10 +454,10 @@ def insert_share(db_connection, values):
 
 def insert_profits(db_connection, values):
     """
-
-    :param db_connection:
-    :param values:
-    :return:
+    Performs insert statement of profit entries
+    :param db_connection: psycopg2 connection to database
+    :param values: dictionary of values to be integrated in the statement
+    :return: error message
     """
 
     # TODO: combine all insert methods to one
