@@ -1319,3 +1319,11 @@ class InsertCashflowPage(BasicPage):
         # create heading
         self.label_heading = ttk.Label(self, text="Insert cashflow", font=HEADING1_FONT)
         self.label_heading.place(x=480, y=50, anchor='center')
+
+        # crate label for choosing share
+        self.label_choose_share = ttk.Label(self, text="Pick a share", font=NORMAL_FONT)
+        self.label_choose_share.place(x=350, y=100, anchor='center')
+
+        # create combobox for shares
+        self.combobox_shares = AutocompleteCombobox(self, width=30)
+        self.combobox_shares.place(x=525, y=100, anchor='center')
