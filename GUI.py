@@ -1011,6 +1011,11 @@ class ParentInsertPage(BasicPage):
         # reset scrolledtext
         self.scrolledtext_data.delete('1.0', tk.END)
 
+    @staticmethod
+    def create_five_year_range():
+        # TODO: sinnvollen Ort dafür finden
+        return list(range(dt.datetime.now().year - 5, dt.datetime.now().year))
+
     def collect_existing_data(self):
         """
         Get existing profit instances for the current share and display it in the corresponding scrolled text
@@ -1420,3 +1425,21 @@ class InsertCashflowPage(ParentInsertPage):
 
         # write insert type in small letters
         super().__init__(parent, controller, insert_type="cashflow")
+
+        # create checkbox for first year
+        self.checkbox_1_selected = tk.BooleanVar()
+        self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
+        self.checkbox_year_1.place(x=125, y=200, anchor='center')
+
+        # create input box for year 1
+        self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_1)
+        self.spinbox_year_1.place(x=225, y=200, anchor='center')
+
+        # create input for cashflow 1
+        self.entry_cashflow_1 = ttk.Entry(self)
+        self.entry_cashflow_1.place(x=425, y=200, anchor='center')
+
+        # rearrange insert button
+        self.button_insert_data.place(x=480, y=325, anchor='center')
