@@ -1445,6 +1445,10 @@ class InsertCashflowPage(ParentInsertPage):
         self.button_insert_data.place(x=480, y=325, anchor='center')
 
     def update_frame(self):
+        """
+
+        :return:
+        """
 
         # set all checkboxes to be not selected
         self.checkbox_1_selected.set(True)
@@ -1454,3 +1458,96 @@ class InsertCashflowPage(ParentInsertPage):
 
         # reset all spinboxes
         self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
+
+    def insert_data_in_db(self):
+        """
+        Perform several validity checks for the user input.
+        If no errors are detected, create the inserted profit values in the database
+        :return: None
+        """
+
+        errors_detected = False
+
+        # get current share id from combobox
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror("No selection", "No combobox item selected! \n"
+                                                 "Please select a share to which the cashflows should refer.")
+            errors_detected = True
+
+        # get the inserted cashflow value
+        cashflow = self.entry_cashflow_1.get()
+
+        values_to_be_inserted = []
+
+        # control for each checkbox whether inputs are valid and consistend
+        # - if a checkbox is selected, the corresponding profit have to be started
+        # - the inserted chasflow has to be a float
+        if self.checkbox_1_selected.get() and cashflow == "" and not errors_detected:
+            messagebox.showerror("Missing Profit", "Cashflow input is empty. \n" 
+                                                   "Please specify the cashflow value or toggle the checkbox.")
+            errors_detected = True
+
+        if self.checkbox_1_selected.get() and cashflow != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_1.get(), float(cashflow)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
+                errors_detected = True
+
+        # show message if the checkbox is not selected
+        if not self.checkbox_1_selected and not errors_detected:
+            messagebox.showerror("Empty Statement", "The checkbox is not selected. \n" 
+                                                    "Accordingly, no values will be inserted. \n" 
+                                                    "Please select the checkbox.")
+            errors_detected = True
+
+        # get list of years for which cashflow values are already in the database
+        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
+                                                                            self.insert_type + "s",
+                                                                            self.current_share_id)
+
+        list_duplicated_years = []
+
+        # catch each year which has already a cashflow value
+        for y,p in values_to_be_inserted:
+            if y in list_existing_years:
+                list_duplicated_years.append(y)
+
+        # show message whicch years are already existent
+        if len(list_duplicated_years) > 0 and not errors_detected:
+            message_text = "Cahsflows for "
+
+            for each_year in list_duplicated_years:
+                message_text += str(each_year) + " "
+
+            message_text += "already exist. \n Please use Update section to change the values."
+            messagebox.showerror("Year(s) exist already", message_text)
+            errors_detected = True
+
+        values_per_entry = {}
+
+        # if no errors are found so far, we can insert the values in the database
+        if not errors_detected:
+
+            ts_curr_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # create a dictionary with all values for each year
+            values_per_entry.update({"year": list[y for y,p in values_to_be_inserted]})
+            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
+                                                       ])})
+            values_per_entry.update({self.insert_type: list([p for y, p in values_to_be_inserted])})
+            values_per_entry.update({"valid_from": list([ts_curr_time for i in range(len(values_to_be_inserted))])})
+            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
+                                                       ])})
+
+        # finally perform insert into db
+        error = DB_Communication.insert_cashflows(self.db_connection, values_per_entry)
+
+        if error is None:
+            self.update_frame()
+            messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
+        else:
+            messagebox.showerror("DB Error", "An error has occured. Please try again."
+                                         "In case the error remains, please restart the application")
