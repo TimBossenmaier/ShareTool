@@ -352,13 +352,36 @@ def get_profits_for_specific_share(sql_cursor, share_id):
 
     sql_cursor.execute(sql_query)
 
-    list_years = []
+    list_profits = []
 
     for each_line in sql_cursor.fetchall():
 
-        list_years.append(each_line)
+        list_profits.append(each_line)
 
-    return list_years
+    return list_profits
+
+
+def get_data_for_specific_share(sql_cursor, share_id, table_name):
+    """
+    Get all existing profit values and years for the given share
+    :param sql_cursor: current sql cursor
+    :param share_id: id of share to be queried
+    :return:
+    """
+
+    sql_query = 'SELECT tab.year, tab.profit FROM entities.shares share ' \
+                'INNER JOIN data.' + table_name + ' tab on tab."share_ID" = share."ID" ' \
+                'WHERE share."ID" = ' + str(share_id)
+
+    sql_cursor.execute(sql_query)
+
+    list_data = []
+
+    for each_line in sql_cursor.fetchall():
+
+        list_data.append(each_line)
+
+    return list_data
 
 
 def create_insert_into_statement(table_name, column_names, returning=False):
