@@ -1003,13 +1003,7 @@ class ParentInsertPage(BasicPage):
            update the frame's components
            :return: None
         """
-
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
-        # reset scrolledtext
-        self.scrolledtext_data.delete('1.0', tk.END)
+        pass
 
     @staticmethod
     def create_five_year_range():
@@ -1059,8 +1053,9 @@ class ParentInsertPage(BasicPage):
     def insert_data_in_db(self):
         """
         Placeholder method
-        :return:
+        :return: None
         """
+        pass
 
 
 class InsertProfitsPage(BasicPage):
@@ -1449,6 +1444,12 @@ class InsertCashflowPage(ParentInsertPage):
 
         :return:
         """
+        # update sector combobox
+        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
+        self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+        # reset scrolledtext
+        self.scrolledtext_data.delete('1.0', tk.END)
 
         # set all checkboxes to be not selected
         self.checkbox_1_selected.set(True)
@@ -1534,7 +1535,7 @@ class InsertCashflowPage(ParentInsertPage):
             ts_curr_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             # create a dictionary with all values for each year
-            values_per_entry.update({"year": list[y for y,p in values_to_be_inserted]})
+            values_per_entry.update({"year": list([y for y,p in values_to_be_inserted])})
             values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
                                                        ])})
             values_per_entry.update({self.insert_type: list([p for y, p in values_to_be_inserted])})
@@ -1550,4 +1551,4 @@ class InsertCashflowPage(ParentInsertPage):
             messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
         else:
             messagebox.showerror("DB Error", "An error has occured. Please try again."
-                                         "In case the error remains, please restart the application")
+                                 "In case the error remains, please restart the application")
