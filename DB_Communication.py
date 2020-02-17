@@ -366,10 +366,11 @@ def get_data_for_specific_share(sql_cursor, share_id, table_name):
     Get all existing profit values and years for the given share
     :param sql_cursor: current sql cursor
     :param share_id: id of share to be queried
+    :param table_name: name of the corresponding db table
     :return:
     """
 
-    sql_query = 'SELECT tab.year, tab.profit FROM entities.shares share ' \
+    sql_query = 'SELECT tab.year, tab.' + table_name[:-1] + ' FROM entities.shares share ' \
                 'INNER JOIN data.' + table_name + ' tab on tab."share_ID" = share."ID" ' \
                 'WHERE share."ID" = ' + str(share_id)
 
