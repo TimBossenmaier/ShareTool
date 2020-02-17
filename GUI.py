@@ -948,6 +948,44 @@ class CreateEntitiesPage(BasicPage):
         self.comment = comm
 
 
+class ParentInsertPage(BasicPage):
+    """
+    Parent Page for all insert pages
+    """
+
+    def __init__(self, parent, controller):
+
+        super().__init__(parent, controller)
+
+        # id of modified share
+        self.current_share_id = 0
+
+        # data frame for shares
+        self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
+
+        # create heading
+        self.label_heading = ttk.Label(self, text="Insert xy", font=HEADING1_FONT)
+        self.label_heading.place(x=480, y=50, anchor='center')
+
+        # crate label for choosing share
+        self.label_choose_share = ttk.Label(self, text="Pick a share", font=NORMAL_FONT)
+        self.label_choose_share.place(x=350, y=100, anchor='center')
+
+        # create combobox for shares
+        self.combobox_shares = AutocompleteCombobox(self, width=30)
+        self.combobox_shares.place(x=525, y=100, anchor='center')
+
+    def update_frame(self):
+        """
+           update the frame's components
+           :return: None
+        """
+
+        # update sector combobox
+        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
+        self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+
 class InsertProfitsPage(BasicPage):
     """
      Page allows user to create new profit entries for a specific share
