@@ -1339,7 +1339,7 @@ class InsertProfitsPage(BasicPage):
                                                  "In case the error remains, please restart the application")
 
 
-class InsertCashflowPage(BasicPage):
+class InsertCashflowPage(ParentInsertPage):
     """
     Page allows user to create a new cashflow entry for a specific share
     """
@@ -1348,20 +1348,4 @@ class InsertCashflowPage(BasicPage):
 
         super().__init__(parent, controller)
 
-        # id of modified share
-        self.current_share_id = 0
 
-        # data frame for shares
-        self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
-
-        # create heading
-        self.label_heading = ttk.Label(self, text="Insert cashflow", font=HEADING1_FONT)
-        self.label_heading.place(x=480, y=50, anchor='center')
-
-        # crate label for choosing share
-        self.label_choose_share = ttk.Label(self, text="Pick a share", font=NORMAL_FONT)
-        self.label_choose_share.place(x=350, y=100, anchor='center')
-
-        # create combobox for shares
-        self.combobox_shares = AutocompleteCombobox(self, width=30)
-        self.combobox_shares.place(x=525, y=100, anchor='center')
