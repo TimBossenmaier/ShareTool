@@ -964,7 +964,6 @@ class ParentInsertPage(BasicPage):
         self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
 
         # create heading
-
         self.label_heading = ttk.Label(self, text="Insert xy", font=HEADING1_FONT)
         self.label_heading.place(x=480, y=50, anchor='center')
 
@@ -1351,5 +1350,8 @@ class InsertCashflowPage(ParentInsertPage):
     def __init__(self, parent, controller):
 
         super().__init__(parent, controller)
+
+        # set page heading
+        self.set_page_heading("Insert Cashflow")
 
 
