@@ -953,18 +953,21 @@ class ParentInsertPage(BasicPage):
     Parent Page for all insert pages
     """
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, insert_type=""):
 
         super().__init__(parent, controller)
 
         # id of modified share
         self.current_share_id = 0
 
+        # type of insert
+        self.insert_type = insert_type
+
         # data frame for shares
         self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
 
         # create heading
-        self.label_heading = ttk.Label(self, text="Insert xy", font=HEADING1_FONT)
+        self.label_heading = ttk.Label(self, text="Insert " + self.insert_type, font=HEADING1_FONT)
         self.label_heading.place(x=480, y=50, anchor='center')
 
         # crate label for choosing share
@@ -974,6 +977,17 @@ class ParentInsertPage(BasicPage):
         # create combobox for shares
         self.combobox_shares = AutocompleteCombobox(self, width=30)
         self.combobox_shares.place(x=525, y=100, anchor='center')
+
+        # create button for existing profits
+        self.button_existing_profits = ttk.Button(self, text="Show existing " + self.insert_type + "s",
+                                                  command=self.collect_existing_profits)
+        self.button_existing_profits.place(x=750, y=100, anchor='center')
+
+        # create text box for existing profits
+        self.heading_existing_profits = ttk.Label(self, text="Existing " + self.insert_type + "s", font=LARGE_FONT)
+        self.heading_existing_profits.place(x=700, y=175, anchor='center')
+        self.scrolledtext_profits = ScrolledText(self, width=25, height=11, wrap='word')
+        self.scrolledtext_profits.place(x=750, y=300, anchor='center')
 
     def update_frame(self):
         """
@@ -985,8 +999,47 @@ class ParentInsertPage(BasicPage):
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
 
-    def set_page_heading(self, head):
-        self.label_heading.config(text=head)
+    def collect_existing_profits(self):
+        """
+        Get existing profit instances for the current share and display it in the corresponding scrolled text
+        :return: None
+        """
+
+        # clear text
+        self.scrolledtext_profits.delete('1.0', tk.END)
+
+        errors_detected = False
+
+        # get current share id from combobox
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror("No selection", "No combobox item selected! \n"
+                                                 "Please select a share to which the " + self.insert_type +
+                                 "s should refer.")
+            errors_detected = True
+
+        if not errors_detected:
+
+            existing_profits = ""
+
+            # get tuples for year and profit for the current share as a list
+            list_profits = DB_Communication.get_profits_for_specific_share(self.db_connection.cursor(),
+                                                                           self.current_share_id)
+            # create text according to query results
+            if len(list_profits) > 0:
+                for each_profit in list_profits:
+                    year, profit = each_profit
+
+                    existing_profits += str(year) + ": " + str(profit) + "\n"
+            else:
+                existing_profits = "No " + self.insert_type + "s available so far"
+
+            # display text in text box
+            self.scrolledtext_profits.insert(tk.INSERT, existing_profits)
+
+    def set_insert_type(self, head):
+        self.insert_type.set(head)
 
 
 class InsertProfitsPage(BasicPage):
@@ -1349,9 +1402,4 @@ class InsertCashflowPage(ParentInsertPage):
 
     def __init__(self, parent, controller):
 
-        super().__init__(parent, controller)
-
-        # set page heading
-        self.set_page_heading("Insert Cashflow")
-
-
+        super().__init__(parent, controller, insert_type="Cashflow")
