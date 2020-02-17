@@ -978,12 +978,21 @@ class ParentInsertPage(BasicPage):
         self.combobox_shares = AutocompleteCombobox(self, width=30)
         self.combobox_shares.place(x=525, y=100, anchor='center')
 
-        # create button for existing profits
+        # create label for insert
+        self.label_heading_insert_profit = ttk.Label(self, text="Insert " + self.insert_type + "s", font=LARGE_FONT)
+        self.label_heading_insert_profit.place(x=100, y=150, anchor='center')
+
+        # create button for existing data
         self.button_existing_data = ttk.Button(self, text="Show existing " + self.insert_type + "s",
-                                                  command=self.collect_existing_data)
+                                               command=self.collect_existing_data)
         self.button_existing_data.place(x=750, y=100, anchor='center')
 
-        # create text box for existing profits
+        # create insert button
+        self.button_insert_data = ttk.Button(self, text="Insert " + self.insert_type + "s",
+                                             command=self.insert_data_in_db)
+        self.button_insert_data.place(x=480, y=475, anchor='center')
+
+        # create text box for existing data
         self.heading_existing_data = ttk.Label(self, text="Existing " + self.insert_type + "s", font=LARGE_FONT)
         self.heading_existing_data.place(x=700, y=175, anchor='center')
         self.scrolledtext_data = ScrolledText(self, width=25, height=11, wrap='word')
@@ -998,6 +1007,9 @@ class ParentInsertPage(BasicPage):
         # update sector combobox
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+        # reset scrolledtext
+        self.scrolledtext_data.delete('1.0', tk.END)
 
     def collect_existing_data(self):
         """
@@ -1038,6 +1050,12 @@ class ParentInsertPage(BasicPage):
 
             # display text in text box
             self.scrolledtext_data.insert(tk.INSERT, existing_data)
+
+    def insert_data_in_db(self):
+        """
+        Placeholder method
+        :return:
+        """
 
 
 class InsertProfitsPage(BasicPage):
