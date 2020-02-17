@@ -1443,3 +1443,14 @@ class InsertCashflowPage(ParentInsertPage):
 
         # rearrange insert button
         self.button_insert_data.place(x=480, y=325, anchor='center')
+
+    def update_frame(self):
+
+        # set all checkboxes to be not selected
+        self.checkbox_1_selected.set(True)
+
+        # clear all entries
+        self.entry_cashflow_1.delete(0, tk.END)
+
+        # reset all spinboxes
+        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
