@@ -531,7 +531,7 @@ def insert_cashflows(db_connection, values):
         query = create_insert_into_statement("cashflows", column_names)
 
         for i in range(len(values["year"])):
-            sql_cursor.execute(query, (values["year"][i], values["share_ID"][i], values["profit"][i],
+            sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values["cashflow"][i],
                                        values["valid_from"][i], values["valid_to"][i]))
 
         db_connection.commit()

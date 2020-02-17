@@ -1486,7 +1486,7 @@ class InsertCashflowPage(ParentInsertPage):
         # - if a checkbox is selected, the corresponding profit have to be started
         # - the inserted chasflow has to be a float
         if self.checkbox_1_selected.get() and cashflow == "" and not errors_detected:
-            messagebox.showerror("Missing Profit", "Cashflow input is empty. \n" 
+            messagebox.showerror("Missing Cashflow", "Cashflow input is empty. \n" 
                                                    "Please specify the cashflow value or toggle the checkbox.")
             errors_detected = True
 
@@ -1512,7 +1512,7 @@ class InsertCashflowPage(ParentInsertPage):
         list_duplicated_years = []
 
         # catch each year which has already a cashflow value
-        for y,p in values_to_be_inserted:
+        for y, p in values_to_be_inserted:
             if y in list_existing_years:
                 list_duplicated_years.append(y)
 
@@ -1523,7 +1523,7 @@ class InsertCashflowPage(ParentInsertPage):
             for each_year in list_duplicated_years:
                 message_text += str(each_year) + " "
 
-            message_text += "already exist. \n Please use Update section to change the values."
+            message_text += "already exist. \nPlease use Update section to change the values."
             messagebox.showerror("Year(s) exist already", message_text)
             errors_detected = True
 
@@ -1535,7 +1535,7 @@ class InsertCashflowPage(ParentInsertPage):
             ts_curr_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             # create a dictionary with all values for each year
-            values_per_entry.update({"year": list([y for y,p in values_to_be_inserted])})
+            values_per_entry.update({"year": list([y for y, p in values_to_be_inserted])})
             values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
                                                        ])})
             values_per_entry.update({self.insert_type: list([p for y, p in values_to_be_inserted])})
@@ -1543,12 +1543,12 @@ class InsertCashflowPage(ParentInsertPage):
             values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
                                                        ])})
 
-        # finally perform insert into db
-        error = DB_Communication.insert_cashflows(self.db_connection, values_per_entry)
+            # finally perform insert into db
+            error = DB_Communication.insert_cashflows(self.db_connection, values_per_entry)
 
-        if error is None:
-            self.update_frame()
-            messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
-        else:
-            messagebox.showerror("DB Error", "An error has occured. Please try again."
-                                 "In case the error remains, please restart the application")
+            if error is None:
+                self.update_frame()
+                messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
+            else:
+                messagebox.showerror("DB Error", "An error has occured. Please try again."
+                                     "In case the error remains, please restart the application")
