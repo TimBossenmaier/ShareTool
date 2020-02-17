@@ -964,6 +964,7 @@ class ParentInsertPage(BasicPage):
         self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
 
         # create heading
+
         self.label_heading = ttk.Label(self, text="Insert xy", font=HEADING1_FONT)
         self.label_heading.place(x=480, y=50, anchor='center')
 
@@ -984,6 +985,9 @@ class ParentInsertPage(BasicPage):
         # update sector combobox
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+    def set_page_heading(self, head):
+        self.label_heading.config(text=head)
 
 
 class InsertProfitsPage(BasicPage):
