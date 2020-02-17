@@ -979,15 +979,15 @@ class ParentInsertPage(BasicPage):
         self.combobox_shares.place(x=525, y=100, anchor='center')
 
         # create button for existing profits
-        self.button_existing_profits = ttk.Button(self, text="Show existing " + self.insert_type + "s",
-                                                  command=self.collect_existing_profits)
-        self.button_existing_profits.place(x=750, y=100, anchor='center')
+        self.button_existing_data = ttk.Button(self, text="Show existing " + self.insert_type + "s",
+                                                  command=self.collect_existing_data)
+        self.button_existing_data.place(x=750, y=100, anchor='center')
 
         # create text box for existing profits
-        self.heading_existing_profits = ttk.Label(self, text="Existing " + self.insert_type + "s", font=LARGE_FONT)
-        self.heading_existing_profits.place(x=700, y=175, anchor='center')
-        self.scrolledtext_profits = ScrolledText(self, width=25, height=11, wrap='word')
-        self.scrolledtext_profits.place(x=750, y=300, anchor='center')
+        self.heading_existing_data = ttk.Label(self, text="Existing " + self.insert_type + "s", font=LARGE_FONT)
+        self.heading_existing_data.place(x=700, y=175, anchor='center')
+        self.scrolledtext_data = ScrolledText(self, width=25, height=11, wrap='word')
+        self.scrolledtext_data.place(x=750, y=300, anchor='center')
 
     def update_frame(self):
         """
@@ -999,14 +999,14 @@ class ParentInsertPage(BasicPage):
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
 
-    def collect_existing_profits(self):
+    def collect_existing_data(self):
         """
         Get existing profit instances for the current share and display it in the corresponding scrolled text
         :return: None
         """
 
         # clear text
-        self.scrolledtext_profits.delete('1.0', tk.END)
+        self.scrolledtext_data.delete('1.0', tk.END)
 
         errors_detected = False
 
@@ -1021,25 +1021,23 @@ class ParentInsertPage(BasicPage):
 
         if not errors_detected:
 
-            existing_profits = ""
+            existing_data = ""
 
             # get tuples for year and profit for the current share as a list
-            list_profits = DB_Communication.get_profits_for_specific_share(self.db_connection.cursor(),
-                                                                           self.current_share_id)
+            list_data = DB_Communication.get_data_for_specific_share(self.db_connection.cursor(),
+                                                                     self.current_share_id,
+                                                                     self.insert_type + "s")
             # create text according to query results
-            if len(list_profits) > 0:
-                for each_profit in list_profits:
-                    year, profit = each_profit
+            if len(list_data) > 0:
+                for each_datum in list_data:
+                    year, profit = each_datum
 
-                    existing_profits += str(year) + ": " + str(profit) + "\n"
+                    existing_data += str(year) + ": " + str(profit) + "\n"
             else:
-                existing_profits = "No " + self.insert_type + "s available so far"
+                existing_data = "No " + self.insert_type + "s available so far"
 
             # display text in text box
-            self.scrolledtext_profits.insert(tk.INSERT, existing_profits)
-
-    def set_insert_type(self, head):
-        self.insert_type.set(head)
+            self.scrolledtext_data.insert(tk.INSERT, existing_data)
 
 
 class InsertProfitsPage(BasicPage):
@@ -1402,4 +1400,5 @@ class InsertCashflowPage(ParentInsertPage):
 
     def __init__(self, parent, controller):
 
-        super().__init__(parent, controller, insert_type="Cashflow")
+        # write insert type in small letters
+        super().__init__(parent, controller, insert_type="cashflow")
