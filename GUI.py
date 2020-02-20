@@ -1441,9 +1441,10 @@ class InsertCashflowPage(ParentInsertPage):
 
     def update_frame(self):
         """
-
-        :return:
+           update the frame's components
+           :return: None
         """
+
         # update sector combobox
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
@@ -1463,7 +1464,7 @@ class InsertCashflowPage(ParentInsertPage):
     def insert_data_in_db(self):
         """
         Perform several validity checks for the user input.
-        If no errors are detected, create the inserted profit values in the database
+        If no errors are detected, create the inserted cashflow value in the database
         :return: None
         """
 
@@ -1486,8 +1487,8 @@ class InsertCashflowPage(ParentInsertPage):
         # - if a checkbox is selected, the corresponding profit have to be started
         # - the inserted chasflow has to be a float
         if self.checkbox_1_selected.get() and cashflow == "" and not errors_detected:
-            messagebox.showerror("Missing Cashflow", "Cashflow input is empty. \n" 
-                                                   "Please specify the cashflow value or toggle the checkbox.")
+            messagebox.showerror("Missing Cashflow", "Cashflow input is empty. \n"
+                                                     "Please specify the cashflow value or toggle the checkbox.")
             errors_detected = True
 
         if self.checkbox_1_selected.get() and cashflow != "" and not errors_detected:
@@ -1516,7 +1517,7 @@ class InsertCashflowPage(ParentInsertPage):
             if y in list_existing_years:
                 list_duplicated_years.append(y)
 
-        # show message whicch years are already existent
+        # show message which years are already existent
         if len(list_duplicated_years) > 0 and not errors_detected:
             message_text = "Cahsflows for "
 
@@ -1550,5 +1551,5 @@ class InsertCashflowPage(ParentInsertPage):
                 self.update_frame()
                 messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
             else:
-                messagebox.showerror("DB Error", "An error has occured. Please try again."
+                messagebox.showerror("DB Error", "An error has occurred. Please try again."
                                      "In case the error remains, please restart the application")
