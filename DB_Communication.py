@@ -352,13 +352,37 @@ def get_profits_for_specific_share(sql_cursor, share_id):
 
     sql_cursor.execute(sql_query)
 
-    list_years = []
+    list_profits = []
 
     for each_line in sql_cursor.fetchall():
 
-        list_years.append(each_line)
+        list_profits.append(each_line)
 
-    return list_years
+    return list_profits
+
+
+def get_data_for_specific_share(sql_cursor, share_id, table_name):
+    """
+    Get all existing profit values and years for the given share
+    :param sql_cursor: current sql cursor
+    :param share_id: id of share to be queried
+    :param table_name: name of the corresponding db table
+    :return:
+    """
+
+    sql_query = 'SELECT tab.year, tab.' + table_name[:-1] + ' FROM entities.shares share ' \
+                'INNER JOIN data.' + table_name + ' tab on tab."share_ID" = share."ID" ' \
+                'WHERE share."ID" = ' + str(share_id)
+
+    sql_cursor.execute(sql_query)
+
+    list_data = []
+
+    for each_line in sql_cursor.fetchall():
+
+        list_data.append(each_line)
+
+    return list_data
 
 
 def create_insert_into_statement(table_name, column_names, returning=False):
@@ -484,3 +508,35 @@ def insert_profits(db_connection, values):
 
     return error_message
 
+
+def insert_cashflows(db_connection, values):
+    """
+    Performs insert statement of cashflow entries
+    :param db_connection: psycopg2 connection to database
+    :param values: dictionary of values to be integrated in the statement
+    :return: error message
+    """
+
+    # TODO: combine all insert methods to one
+
+    error_message = None
+    try:
+        sql_cursor = db_connection.cursor()
+
+        column_names = get_column_names_from_db_table(sql_cursor, "cashflows")
+
+        # remove ID as this is generated automatically by the database
+        column_names.remove("ID")
+
+        query = create_insert_into_statement("cashflows", column_names)
+
+        for i in range(len(values["year"])):
+            sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values["cashflow"][i],
+                                       values["valid_from"][i], values["valid_to"][i]))
+
+        db_connection.commit()
+
+    except BaseException as e:
+        error_message = e
+
+    return error_message

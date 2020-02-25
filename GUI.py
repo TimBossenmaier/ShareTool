@@ -154,6 +154,7 @@ class ShareToolGUI(tk.Tk):
 
         # create menu for new data entries
         self.menu_insert_data = tk.Menu(self.menubar, tearoff=0)
+        self.menu_insert_data.add_command(label="Cashflow", command=self.menu_bar_open_create_cashflows)
         self.menu_insert_data.add_command(label="Profits", command=self.menu_bar_open_create_profits)
 
         # create menu for new entries
@@ -297,21 +298,46 @@ class ShareToolGUI(tk.Tk):
             self.show_frame(CreateEntitiesPage)
 
     def menu_bar_open_create_profits(self):
-        """tbc"""
+        """
+        Opens a frame allowing the user to create new profit entries
+        Creates page as well if required
+        :return: None
+        """
 
         # db_connection is prerequisite for this page
         if self.db_connection is None:
             messagebox.showinfo(title='Not possible yet!',
                                 message="Please first ensure the database connection to be established")
 
-        # check whether CreateEntitiesPage exists already
+        # check whether InsertProfitsPage exists already
         elif InsertProfitsPage in self.frames.keys():
             self.show_frame(InsertProfitsPage)
 
-        # create CreateEntitiesPage if not
+        # create InsertProfitsPage if not
         else:
             self.create_page(InsertProfitsPage)
             self.show_frame(InsertProfitsPage)
+
+    def menu_bar_open_create_cashflows(self):
+        """
+        Opens a frame allowing the user to create new profit entries
+        Creates page as well if required
+        :return: None
+        """
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message="Please first ensure the database connection to be established")
+
+        # check whether InsertCashflowPage exists already
+        elif InsertCashflowPage in self.frames.keys():
+            self.show_frame(InsertCashflowPage)
+
+        # create InsertCashflowPage if not
+        else:
+            self.create_page(InsertCashflowPage)
+            self.show_frame(InsertCashflowPage)
 
 
 class BasicPage(tk.Frame):
@@ -922,6 +948,132 @@ class CreateEntitiesPage(BasicPage):
         self.comment = comm
 
 
+class ParentInsertPage(BasicPage):
+    """
+    Parent Page for all insert pages
+    """
+
+    def __init__(self, parent, controller, insert_type=""):
+
+        super().__init__(parent, controller)
+
+        # id of modified share
+        self.current_share_id = 0
+
+        # type of insert
+        self.insert_type = insert_type
+
+        # data frame for shares
+        self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
+
+        # create heading
+        self.label_heading = ttk.Label(self, text="Insert " + self.insert_type, font=HEADING1_FONT)
+        self.label_heading.place(x=480, y=50, anchor='center')
+
+        # crate label for choosing share
+        self.label_choose_share = ttk.Label(self, text="Pick a share", font=NORMAL_FONT)
+        self.label_choose_share.place(x=350, y=100, anchor='center')
+
+        # create combobox for shares
+        self.combobox_shares = AutocompleteCombobox(self, width=30)
+        self.combobox_shares.place(x=525, y=100, anchor='center')
+
+        # create label for insert
+        self.label_heading_insert_profit = ttk.Label(self, text="Insert " + self.insert_type + "s", font=LARGE_FONT)
+        self.label_heading_insert_profit.place(x=100, y=150, anchor='center')
+
+        # create button for existing data
+        self.button_existing_data = ttk.Button(self, text="Show existing " + self.insert_type + "s",
+                                               command=self.collect_existing_data)
+        self.button_existing_data.place(x=750, y=100, anchor='center')
+
+        # create insert button
+        self.button_insert_data = ttk.Button(self, text="Insert " + self.insert_type + "s",
+                                             command=self.insert_data_in_db)
+        self.button_insert_data.place(x=480, y=475, anchor='center')
+
+        # create text box for existing data
+        self.heading_existing_data = ttk.Label(self, text="Existing " + self.insert_type + "s", font=LARGE_FONT)
+        self.heading_existing_data.place(x=700, y=175, anchor='center')
+        self.scrolledtext_data = ScrolledText(self, width=25, height=11, wrap='word')
+        self.scrolledtext_data.place(x=750, y=300, anchor='center')
+
+    def update_frame(self):
+        """
+           update the frame's components
+           :return: None
+        """
+        pass
+
+    def update_parent_elements_on_frame(self):
+        """
+        update all elements owned by parent class
+        :return: None
+        """
+
+        # reset combobox selection
+        self.combobox_shares.delete(0, tk.END)
+
+        # update sector combobox
+        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
+        self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+        # reset scrolledtext
+        self.scrolledtext_data.delete('1.0', tk.END)
+
+    @staticmethod
+    def create_five_year_range():
+        # TODO: sinnvollen Ort dafür finden
+        return list(range(dt.datetime.now().year - 5, dt.datetime.now().year))
+
+    def collect_existing_data(self):
+        """
+        Get existing profit instances for the current share and display it in the corresponding scrolled text
+        :return: None
+        """
+
+        # clear text
+        self.scrolledtext_data.delete('1.0', tk.END)
+
+        errors_detected = False
+
+        # get current share id from combobox
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror("No selection", "No combobox item selected! \n"
+                                                 "Please select a share to which the " + self.insert_type +
+                                 "s should refer.")
+            errors_detected = True
+
+        if not errors_detected:
+
+            existing_data = ""
+
+            # get tuples for year and profit for the current share as a list
+            list_data = DB_Communication.get_data_for_specific_share(self.db_connection.cursor(),
+                                                                     self.current_share_id,
+                                                                     self.insert_type + "s")
+            # create text according to query results
+            if len(list_data) > 0:
+                for each_datum in list_data:
+                    year, profit = each_datum
+
+                    existing_data += str(year) + ": " + str(profit) + "\n"
+            else:
+                existing_data = "No " + self.insert_type + "s available so far"
+
+            # display text in text box
+            self.scrolledtext_data.insert(tk.INSERT, existing_data)
+
+    def insert_data_in_db(self):
+        """
+        Placeholder method
+        :return: None
+        """
+        pass
+
+
 class InsertProfitsPage(BasicPage):
     """
      Page allows user to create new profit entries for a specific share
@@ -1273,3 +1425,144 @@ class InsertProfitsPage(BasicPage):
             else:
                 messagebox.showerror("DB Error", "An error has occured. Please try again."
                                                  "In case the error remains, please restart the application")
+
+
+class InsertCashflowPage(ParentInsertPage):
+    """
+    Page allows user to create a new cashflow entry for a specific share
+    based on ParentInsertPage
+    """
+
+    def __init__(self, parent, controller):
+
+        # write insert type in small letters
+        super().__init__(parent, controller, insert_type="cashflow")
+
+        # create checkbox for first year
+        self.checkbox_1_selected = tk.BooleanVar()
+        self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
+        self.checkbox_year_1.place(x=125, y=200, anchor='center')
+
+        # create input box for year 1
+        self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_1)
+        self.spinbox_year_1.place(x=225, y=200, anchor='center')
+
+        # create input for cashflow 1
+        self.entry_cashflow_1 = ttk.Entry(self)
+        self.entry_cashflow_1.place(x=425, y=200, anchor='center')
+
+        # rearrange insert button
+        self.button_insert_data.place(x=480, y=325, anchor='center')
+
+    def update_frame(self):
+        """
+           update the frame's components
+           :return: None
+        """
+
+        # update parent elements on frame
+        self.update_parent_elements_on_frame()
+
+        # set all checkboxes to be not selected
+        self.checkbox_1_selected.set(True)
+
+        # clear all entries
+        self.entry_cashflow_1.delete(0, tk.END)
+
+        # reset all spinboxes
+        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
+
+    def insert_data_in_db(self):
+        """
+        Perform several validity checks for the user input.
+        If no errors are detected, create the inserted cashflow value in the database
+        :return: None
+        """
+
+        errors_detected = False
+
+        # get current share id from combobox
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror("No selection", "No combobox item selected! \n"
+                                                 "Please select a share to which the cashflows should refer.")
+            errors_detected = True
+
+        # get the inserted cashflow value
+        cashflow = self.entry_cashflow_1.get()
+
+        values_to_be_inserted = []
+
+        # control for each checkbox whether inputs are valid and consistend
+        # - if a checkbox is selected, the corresponding profit have to be started
+        # - the inserted chasflow has to be a float
+        if self.checkbox_1_selected.get() and cashflow == "" and not errors_detected:
+            messagebox.showerror("Missing Cashflow", "Cashflow input is empty. \n"
+                                                     "Please specify the cashflow value or toggle the checkbox.")
+            errors_detected = True
+
+        if self.checkbox_1_selected.get() and cashflow != "" and not errors_detected:
+            try:
+                values_to_be_inserted.append((self.spinbox_var_1.get(), float(cashflow)))
+            except ValueError:
+                messagebox.showerror("Value Error", "Please insert a number as profit.")
+                errors_detected = True
+
+        # show message if the checkbox is not selected
+        if not self.checkbox_1_selected and not errors_detected:
+            messagebox.showerror("Empty Statement", "The checkbox is not selected. \n" 
+                                                    "Accordingly, no values will be inserted. \n" 
+                                                    "Please select the checkbox.")
+            errors_detected = True
+
+        # get list of years for which cashflow values are already in the database
+        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
+                                                                            self.insert_type + "s",
+                                                                            self.current_share_id)
+
+        list_duplicated_years = []
+
+        # catch each year which has already a cashflow value
+        for y, p in values_to_be_inserted:
+            if y in list_existing_years:
+                list_duplicated_years.append(y)
+
+        # show message which years are already existent
+        if len(list_duplicated_years) > 0 and not errors_detected:
+            message_text = "Cahsflows for "
+
+            for each_year in list_duplicated_years:
+                message_text += str(each_year) + " "
+
+            message_text += "already exist. \nPlease use Update section to change the values."
+            messagebox.showerror("Year(s) exist already", message_text)
+            errors_detected = True
+
+        values_per_entry = {}
+
+        # if no errors are found so far, we can insert the values in the database
+        if not errors_detected:
+
+            ts_curr_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # create a dictionary with all values for each year
+            values_per_entry.update({"year": list([y for y, p in values_to_be_inserted])})
+            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
+                                                       ])})
+            values_per_entry.update({self.insert_type: list([p for y, p in values_to_be_inserted])})
+            values_per_entry.update({"valid_from": list([ts_curr_time for i in range(len(values_to_be_inserted))])})
+            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
+                                                       ])})
+
+            # finally perform insert into db
+            error = DB_Communication.insert_cashflows(self.db_connection, values_per_entry)
+
+            if error is None:
+                self.update_frame()
+                messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
+            else:
+                messagebox.showerror("DB Error", "An error has occurred. Please try again."
+                                     "In case the error remains, please restart the application")
