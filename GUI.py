@@ -1414,6 +1414,7 @@ class InsertProfitsPage(BasicPage):
 class InsertCashflowPage(ParentInsertPage):
     """
     Page allows user to create a new cashflow entry for a specific share
+    based on ParentInsertPage
     """
 
     def __init__(self, parent, controller):
