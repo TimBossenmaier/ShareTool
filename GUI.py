@@ -1005,6 +1005,15 @@ class ParentInsertPage(BasicPage):
         """
         pass
 
+    def update_parent_elements_on_frame(self):
+        """
+        update all elements owned by parent class
+        :return: None
+        """
+
+        # reset combobox selection
+        self.combobox_shares.delete(0, tk.END)
+
     @staticmethod
     def create_five_year_range():
         # TODO: sinnvollen Ort dafür finden
@@ -1445,6 +1454,9 @@ class InsertCashflowPage(ParentInsertPage):
            update the frame's components
            :return: None
         """
+
+        # update parent elements on frame
+        self.update_parent_elements_on_frame()
 
         # update sector combobox
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
