@@ -324,7 +324,7 @@ def get_years_for_specific_share(sql_cursor, table, share_id):
     """
 
     sql_query = 'SELECT tab.year FROM entities.shares share ' \
-                'INNER JOIN data.' + table + ' tab on tab."share_ID" = share."ID" ' \
+                'INNER JOIN data."' + table + '" tab on tab."share_ID" = share."ID" ' \
                 'WHERE share."ID" = ' + str(share_id)
 
     sql_cursor.execute(sql_query)
