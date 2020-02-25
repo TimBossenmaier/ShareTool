@@ -1014,6 +1014,13 @@ class ParentInsertPage(BasicPage):
         # reset combobox selection
         self.combobox_shares.delete(0, tk.END)
 
+        # update sector combobox
+        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
+        self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+        # reset scrolledtext
+        self.scrolledtext_data.delete('1.0', tk.END)
+
     @staticmethod
     def create_five_year_range():
         # TODO: sinnvollen Ort dafür finden
@@ -1457,13 +1464,6 @@ class InsertCashflowPage(ParentInsertPage):
 
         # update parent elements on frame
         self.update_parent_elements_on_frame()
-
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
-        # reset scrolledtext
-        self.scrolledtext_data.delete('1.0', tk.END)
 
         # set all checkboxes to be not selected
         self.checkbox_1_selected.set(True)
