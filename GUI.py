@@ -1566,3 +1566,13 @@ class InsertCashflowPage(ParentInsertPage):
             else:
                 messagebox.showerror("DB Error", "An error has occurred. Please try again."
                                      "In case the error remains, please restart the application")
+
+
+class InsertROAPage(ParentInsertPage):
+    """
+
+    """
+
+    def __init__(self, parent, controller):
+
+        super().__init__(parent, controller, insert_type="ROA")
