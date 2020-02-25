@@ -1629,6 +1629,9 @@ class InsertROAPage(ParentInsertPage):
         self.entry_roa_2 = ttk.Entry(self)
         self.entry_roa_2.place(x=425, y=250, anchor='center')
 
+        # rearrange insert button
+        self.button_insert_data.place(x=480, y=375, anchor='center')
+
     def update_frame(self):
         """
            update the frame's components
