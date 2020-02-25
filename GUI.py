@@ -1599,6 +1599,36 @@ class InsertROAPage(ParentInsertPage):
 
         super().__init__(parent, controller, insert_type="ROA")
 
+        # create checkbox for first year
+        self.checkbox_1_selected = tk.BooleanVar()
+        self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
+        self.checkbox_year_1.place(x=125, y=200, anchor='center')
+
+        # create input box for year 1
+        self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_1)
+        self.spinbox_year_1.place(x=225, y=200, anchor='center')
+
+        # create input for ROA 1
+        self.entry_roa_1 = ttk.Entry(self)
+        self.entry_roa_1.place(x=425, y=200, anchor='center')
+
+        # create checkbox for second year
+        self.checkbox_2_selected = tk.BooleanVar()
+        self.checkbox_year_2 = ttk.Checkbutton(self, var=self.checkbox_2_selected)
+        self.checkbox_year_2.place(x=125, y=250, anchor='center')
+
+        # create input box for year 2
+        self.spinbox_var_2 = tk.IntVar(value=self.create_five_year_range()[-2])
+        self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_2)
+        self.spinbox_year_2.place(x=225, y=250, anchor='center')
+
+        # create input for ROA 2
+        self.entry_roa_2 = ttk.Entry(self)
+        self.entry_roa_2.place(x=425, y=250, anchor='center')
+
     def update_frame(self):
         """
            update the frame's components
