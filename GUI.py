@@ -156,6 +156,7 @@ class ShareToolGUI(tk.Tk):
         self.menu_insert_data = tk.Menu(self.menubar, tearoff=0)
         self.menu_insert_data.add_command(label="Cashflow", command=self.menu_bar_open_create_cashflows)
         self.menu_insert_data.add_command(label="Profits", command=self.menu_bar_open_create_profits)
+        self.menu_insert_data.add_command(label="ROAs", command=self.menu_bar_open_create_roas)
 
         # create menu for new entries
         self.menu_new = tk.Menu(self.menubar, tearoff=0)
@@ -320,7 +321,7 @@ class ShareToolGUI(tk.Tk):
 
     def menu_bar_open_create_cashflows(self):
         """
-        Opens a frame allowing the user to create new profit entries
+        Opens a frame allowing the user to create new cashflow entries
         Creates page as well if required
         :return: None
         """
@@ -338,6 +339,28 @@ class ShareToolGUI(tk.Tk):
         else:
             self.create_page(InsertCashflowPage)
             self.show_frame(InsertCashflowPage)
+
+    def menu_bar_open_create_roas(self):
+        """
+
+        Opens a frame allowing the user to create new ROA entries
+        Creates page as well if required
+        :return: None
+        """
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message='Please first ensure the database connection to be established')
+
+        # check whether InsertROAPage exists already
+        elif InsertROAPage in self.frames.keys():
+            self.show_frame(InsertROAPage)
+
+        # create InsertROAPage if not
+        else:
+            self.create_page(InsertROAPage)
+            self.show_frame(InsertROAPage)
 
 
 class BasicPage(tk.Frame):
