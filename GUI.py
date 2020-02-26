@@ -1728,18 +1728,18 @@ class InsertROAPage(ParentInsertPage):
         list_duplicated_years = []
 
         # catch each year which has already a ROA value
-        for y,p in values_to_be_inserted:
+        for y, p in values_to_be_inserted:
             if y in list_existing_years:
                 list_duplicated_years.append(y)
 
         # show message which years are already existent
         if len(list_duplicated_years) > 0 and not errors_detected:
-            message_text = "ROAs for "
+            message_text = "ROA(s) for "
 
             for each_year in list_duplicated_years:
                 message_text += str(each_year) + " "
 
-            message_text += "already exists. \nPlease use Update section to change the values."
+            message_text += "already exist(s). \nPlease use Update section to change the values."
             messagebox.showerror(title="Year(s) exist already",
                                  message=message_text)
             errors_detected = True
@@ -1761,7 +1761,6 @@ class InsertROAPage(ParentInsertPage):
                                                        ])})
 
             # finally perform insert into db
-            # TODO: implement
             error = DB_Communication.insert_roas(self.db_connection, values_per_entry)
 
             if error is None:
@@ -1772,5 +1771,3 @@ class InsertROAPage(ParentInsertPage):
                 messagebox.showerror(title="DB Error",
                                      message="An error has occurred. Please try again."
                                              "In case the error remains, please restart the application")
-
-        # TODO: test

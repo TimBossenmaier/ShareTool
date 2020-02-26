@@ -125,7 +125,7 @@ def create_insert_into_statement_for_df(df, table_name):
     :return: sql statement as a string
     """
 
-    query_string = "INSERT INTO " + table_schema_relation[table_name] + "." + table_name + " ("
+    query_string = "INSERT INTO " + table_schema_relation[table_name] + '."' + table_name + '" ('
 
     # iterate over the columns
     for column, i in zip(df.columns, range(1, df.shape[1] + 1)):
@@ -394,7 +394,7 @@ def create_insert_into_statement(table_name, column_names, returning=False):
     :return: sql statement as a string
     """
 
-    query_string = "INSERT INTO " + table_schema_relation[table_name] + "." + table_name + " ("
+    query_string = "INSERT INTO " + table_schema_relation[table_name] + '."' + table_name + '" ('
 
     # iterate over the columns
     for column, i in zip(column_names, range(1, len(column_names) + 1)):
@@ -564,7 +564,7 @@ def insert_roas(db_connection, values):
         query = create_insert_into_statement("ROAs", column_names)
 
         for i in range(len(values["year"])):
-            sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values["roa"][i],
+            sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values["ROA"][i],
                                        values["valid_from"][i], values["valid_to"][i]))
 
         db_connection.commit()
