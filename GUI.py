@@ -1691,3 +1691,25 @@ class InsertROAPage(ParentInsertPage):
                 messagebox.showerror(title="DB Error",
                                      message="An error has occurred. Please try again."
                                              "In case the error remains, please restart the application")
+
+
+class InsertLeveragePage(ParentInsertPage):
+    """
+    Page allows user to create new Leverage entries for a specific share
+    based on ParentInsertPage
+    """
+
+    def __init__(self, parent, controller):
+
+        super().__init__(parent, controller, insert_type="leverage")
+
+    def update_frame(self):
+        """
+        update the frame's components
+        :return: None
+        """
+        self.update_parent_elements_on_frame()
+
+        # update sector combobox
+        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
+        self.combobox_shares.set_completion_list(self.df_shares.company_name)
