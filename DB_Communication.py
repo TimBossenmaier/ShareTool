@@ -125,7 +125,7 @@ def create_insert_into_statement_for_df(df, table_name):
     :return: sql statement as a string
     """
 
-    query_string = "INSERT INTO " + table_schema_relation[table_name] + "." + table_name + " ("
+    query_string = "INSERT INTO " + table_schema_relation[table_name] + '."' + table_name + '" ('
 
     # iterate over the columns
     for column, i in zip(df.columns, range(1, df.shape[1] + 1)):
@@ -324,7 +324,7 @@ def get_years_for_specific_share(sql_cursor, table, share_id):
     """
 
     sql_query = 'SELECT tab.year FROM entities.shares share ' \
-                'INNER JOIN data.' + table + ' tab on tab."share_ID" = share."ID" ' \
+                'INNER JOIN data."' + table + '" tab on tab."share_ID" = share."ID" ' \
                 'WHERE share."ID" = ' + str(share_id)
 
     sql_cursor.execute(sql_query)
@@ -371,7 +371,7 @@ def get_data_for_specific_share(sql_cursor, share_id, table_name):
     """
 
     sql_query = 'SELECT tab.year, tab.' + table_name[:-1] + ' FROM entities.shares share ' \
-                'INNER JOIN data.' + table_name + ' tab on tab."share_ID" = share."ID" ' \
+                'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
                 'WHERE share."ID" = ' + str(share_id)
 
     sql_cursor.execute(sql_query)
@@ -394,7 +394,7 @@ def create_insert_into_statement(table_name, column_names, returning=False):
     :return: sql statement as a string
     """
 
-    query_string = "INSERT INTO " + table_schema_relation[table_name] + "." + table_name + " ("
+    query_string = "INSERT INTO " + table_schema_relation[table_name] + '."' + table_name + '" ('
 
     # iterate over the columns
     for column, i in zip(column_names, range(1, len(column_names) + 1)):
@@ -532,6 +532,39 @@ def insert_cashflows(db_connection, values):
 
         for i in range(len(values["year"])):
             sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values["cashflow"][i],
+                                       values["valid_from"][i], values["valid_to"][i]))
+
+        db_connection.commit()
+
+    except BaseException as e:
+        error_message = e
+
+    return error_message
+
+
+def insert_roas(db_connection, values):
+    """
+    Performs insert statement of ROAs entries
+    :param db_connection: psycopg2 connection to database
+    :param values: dictionary of values to be integrated in the statement
+    :return: error message
+    """
+
+    # TODO: combine all insert methods to one
+
+    error_message = None
+    try:
+        sql_cursor = db_connection.cursor()
+
+        column_names = get_column_names_from_db_table(sql_cursor, "ROAs")
+
+        # remove ID as this is generated automatically by the database
+        column_names.remove("ID")
+
+        query = create_insert_into_statement("ROAs", column_names)
+
+        for i in range(len(values["year"])):
+            sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values["ROA"][i],
                                        values["valid_from"][i], values["valid_to"][i]))
 
         db_connection.commit()
