@@ -155,6 +155,7 @@ class ShareToolGUI(tk.Tk):
         # create menu for new data entries
         self.menu_insert_data = tk.Menu(self.menubar, tearoff=0)
         self.menu_insert_data.add_command(label="Cashflow", command=self.menu_bar_open_create_cashflows)
+        self.menu_insert_data.add_command(label='Leverages', command=self.menu_bar_open_create_leverages)
         self.menu_insert_data.add_command(label="Profits", command=self.menu_bar_open_create_profits)
         self.menu_insert_data.add_command(label="ROAs", command=self.menu_bar_open_create_roas)
 
