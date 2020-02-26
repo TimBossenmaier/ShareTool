@@ -1093,36 +1093,15 @@ class ParentInsertPage(BasicPage):
         pass
 
 
-class InsertProfitsPage(BasicPage):
+class InsertProfitsPage(ParentInsertPage):
     """
-     Page allows user to create new profit entries for a specific share
+    Page allows user to create new profit entries for a specific share
+    based on ParentInsertPage
     """
 
     def __init__(self, parent, controller):
 
-        super().__init__(parent, controller)
-
-        # ID of modified share
-        self.current_share_id = 0
-
-        # data frame for shares
-        self.df_shares = pd.DataFrame(columns=['ID', 'company_name'])
-
-        # create heading
-        self.label_heading = ttk.Label(self, text="Insert profits", font=HEADING1_FONT)
-        self.label_heading.place(x=480, y=50, anchor='center')
-
-        # crate label for choosing share
-        self.label_choose_share = ttk.Label(self, text="Pick a share", font=NORMAL_FONT)
-        self.label_choose_share.place(x=350, y=100, anchor='center')
-
-        # create combobox for shares
-        self.combobox_shares = AutocompleteCombobox(self, width=30)
-        self.combobox_shares.place(x=525, y=100, anchor='center')
-
-        # create label for profits
-        self.label_heading_insert_profit = ttk.Label(self, text="Insert profits", font=LARGE_FONT)
-        self.label_heading_insert_profit.place(x=100, y=150, anchor='center')
+        super().__init__(parent, controller, insert_type="profit")
 
         # create checkbox for first year
         self.checkbox_1_selected = tk.BooleanVar()
@@ -1199,26 +1178,13 @@ class InsertProfitsPage(BasicPage):
         self.entry_profit_5 = ttk.Entry(self)
         self.entry_profit_5.place(x=425, y=400, anchor='center')
 
-        # create button for existing profits
-        self.button_existing_profits = ttk.Button(self, text="Show existing profits",
-                                                  command=self.collect_existing_profits)
-        self.button_existing_profits.place(x=750, y=100, anchor='center')
-
-        # create text box for existing profits
-        self.heading_existing_profits = ttk.Label(self, text="Existing profits", font=LARGE_FONT)
-        self.heading_existing_profits.place(x=700, y=175, anchor='center')
-        self.scrolledtext_profits = ScrolledText(self, width=25, height=11, wrap='word')
-        self.scrolledtext_profits.place(x=750, y=300, anchor='center')
-
-        # create insert button
-        self.button_insert_profits = ttk.Button(self, text="Insert profits", command=self.insert_profits_in_db)
-        self.button_insert_profits.place(x=480, y=475, anchor='center')
-
     def update_frame(self):
         """
            update the frame's components
            :return: None
         """
+
+        self.update_parent_elements_on_frame()
 
         # update sector combobox
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
@@ -1242,61 +1208,15 @@ class InsertProfitsPage(BasicPage):
         self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
         self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
         self.spinbox_var_3.set(value=self.create_five_year_range()[-3])
-        self.spinbox_var_4.set(value=self.create_five_year_range()[-4])
-        self.spinbox_var_5.set(value=self.create_five_year_range()[-5])
+        self.spinbox_year_4.set(value=self.create_five_year_range()[-4])
+        self.spinbox_year_5.set(value=self.create_five_year_range()[-5])
 
-        # reset scrolledtext
-        self.scrolledtext_profits.delete('1.0', tk.END)
-
-    @staticmethod
-    def create_five_year_range():
-        # TODO: sinnvollen Ort dafür finden
-        return list(range(dt.datetime.now().year - 5, dt.datetime.now().year))
-
-    def collect_existing_profits(self):
+    def insert_data_in_db(self):
         """
-        Get existing profit instances for the current share and display it in the corresponding scrolled text
-        :return: None
-        """
-
-        # clear text
-        self.scrolledtext_profits.delete('1.0', tk.END)
-
-        errors_detected = False
-
-        # get current share id from combobox
-        try:
-            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
-        except IndexError:
-            messagebox.showerror("No selection", "No combobox item selected! \n"
-                                                 "Please select a share to which the profits should refer.")
-            errors_detected = True
-
-        if not errors_detected:
-
-            existing_profits = ""
-
-            # get tuples for year and profit for the current share as a list
-            list_profits = DB_Communication.get_profits_for_specific_share(self.db_connection.cursor(),
-                                                                           self.current_share_id)
-            # create text according to query results
-            if len(list_profits) > 0:
-                for each_profit in list_profits:
-                    year, profit = each_profit
-
-                    existing_profits += str(year) + ": " + str(profit) + "\n"
-            else:
-                existing_profits = "No profits available so far"
-
-            # display text in text box
-            self.scrolledtext_profits.insert(tk.INSERT, existing_profits)
-
-    def insert_profits_in_db(self):
-        """
-        Perform several validity checks for the user input.
-        If no errors are detected, create the inserted profit values in the database
-        :return: None
-        """
+                Perform several validity checks for the user input.
+                If no errors are detected, create the inserted profit values in the database
+                :return: None
+                """
 
         errors_detected = False
 
@@ -1391,7 +1311,6 @@ class InsertProfitsPage(BasicPage):
                 not self.checkbox_2_selected.get() and \
                 not self.checkbox_1_selected.get() and \
                 not errors_detected:
-
             messagebox.showerror("Empty Statement", "None of the checkboxes are selected.\n"
                                                     "Accordingly, no values will be inserted.\n"
                                                     "Please select at least once.")
@@ -1592,7 +1511,8 @@ class InsertCashflowPage(ParentInsertPage):
 
 class InsertROAPage(ParentInsertPage):
     """
-
+    Page allows user to create new ROA entries for a specific share
+    based on ParentInsertPage
     """
 
     def __init__(self, parent, controller):
