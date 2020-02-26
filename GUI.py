@@ -363,6 +363,29 @@ class ShareToolGUI(tk.Tk):
             self.create_page(InsertROAPage)
             self.show_frame(InsertROAPage)
 
+    def menu_bar_open_create_leverages(self):
+        """
+
+        Opens a frame allowing the user to create new leverage entries
+        Creates page as well if required
+        :return: None
+        """
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message='Please first ensure the database connection to be established')
+
+        # check whether InsertROAPage exists already
+        elif InsertROAPage in self.frames.keys():
+            self.show_frame(InsertLeveragePage)
+
+        # create InsertROAPage if not
+        else:
+            self.create_page(InsertLeveragePage)
+            self.show_frame(InsertLeveragePage)
+
+
 
 class BasicPage(tk.Frame):
     """
