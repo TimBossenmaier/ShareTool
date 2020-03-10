@@ -1771,3 +1771,15 @@ class InsertLeveragePage(ParentInsertPage):
         # update sector combobox
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
+        # set all checkboxes to be not selected
+        self.checkbox_1_selected.set(True)
+        self.checkbox_2_selected.set(True)
+
+        # clear all entries
+        self.entry_leverage_1.delete(0, tk.END)
+        self.entry_leverage_2.delete(0, tk.END)
+
+        # reset all spinboxes
+        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
+        self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
