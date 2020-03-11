@@ -1810,7 +1810,7 @@ class InsertLeveragePage(ParentInsertPage):
         # control for each checkbox whether inputs are valid and consistent
         # - if a checkbox is selected the corresponding leverage value has to be inserted
         # - the inserted leverage value has to be a float
-        print(leverage_1=='')
+
         if self.checkbox_1_selected.get() and leverage_1 == '' and not errors_detected:
             messagebox.showerror(title="Missing leverages",
                                  message="Leverage input is empty, \n" 
@@ -1889,7 +1889,7 @@ class InsertLeveragePage(ParentInsertPage):
                                                        ])})
 
             # finally perform insert into db
-            error = DB_Communication.insert_leverages(self.db_connection, values_per_entry)
+            error = DB_Communication.insert_into_data_table(self.db_connection, self.insert_type, values_per_entry)
 
             if error is None:
                 self.update_frame()
