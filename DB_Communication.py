@@ -369,10 +369,14 @@ def get_data_for_specific_share(sql_cursor, share_id, table_name):
     :param table_name: name of the corresponding db table
     :return:
     """
-
-    sql_query = 'SELECT tab.year, tab.' + table_name[:-1] + ' FROM entities.shares share ' \
-                'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
-                'WHERE share."ID" = ' + str(share_id)
+    if table_name == 'leverages':
+        sql_query = 'SELECT tab.year, tab.' + '	debt_to_equity_ratio' + ' FROM entities.shares share ' \
+                    'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
+                    'WHERE share."ID" = ' + str(share_id)
+    else:
+        sql_query = 'SELECT tab.year, tab.' + table_name[:-1] + ' FROM entities.shares share ' \
+                    'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
+                    'WHERE share."ID" = ' + str(share_id)
 
     sql_cursor.execute(sql_query)
 
@@ -565,6 +569,31 @@ def insert_roas(db_connection, values):
 
         for i in range(len(values["year"])):
             sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values["ROA"][i],
+                                       values["valid_from"][i], values["valid_to"][i]))
+
+        db_connection.commit()
+
+    except BaseException as e:
+        error_message = e
+
+    return error_message
+
+
+def insert_into_data_table(db_connection, table_name, values):
+
+    error_message = None
+    try:
+        sql_cursor = db_connection.cursor()
+
+        column_names = get_column_names_from_db_table(sql_cursor, table_name + "s")
+
+        # remove ID as this is generated automatically by the database
+        column_names.remove("ID")
+
+        query = create_insert_into_statement(table_name + "s", column_names)
+
+        for i in range(len(values["year"])):
+            sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values[table_name][i],
                                        values["valid_from"][i], values["valid_to"][i]))
 
         db_connection.commit()
