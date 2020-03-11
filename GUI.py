@@ -1646,7 +1646,7 @@ class InsertROAPage(ParentInsertPage):
                                          "Please specify a ROA value or toggle a checkbox.")
             errors_detected = True
 
-        if self.checkbox_2_selected and roa_2 != "" and not errors_detected:
+        if self.checkbox_2_selected.get() and roa_2 != "" and not errors_detected:
             try:
                 values_to_be_inserted.append((self.spinbox_var_2.get(), float(roa_2)))
             except ValueError:
@@ -1790,7 +1790,7 @@ class InsertLeveragePage(ParentInsertPage):
         :return: None
         """
 
-        errors_detected = True
+        errors_detected = False
 
         # get the current share id selected in the combobox
         try:
@@ -1810,13 +1810,14 @@ class InsertLeveragePage(ParentInsertPage):
         # control for each checkbox whether inputs are valid and consistent
         # - if a checkbox is selected the corresponding leverage value has to be inserted
         # - the inserted leverage value has to be a float
+        print(leverage_1=='')
         if self.checkbox_1_selected.get() and leverage_1 == '' and not errors_detected:
             messagebox.showerror(title="Missing leverages",
                                  message="Leverage input is empty, \n" 
                                          "Please specify a leverage value or toggle a checkbox.")
             errors_detected = True
 
-        if self.checkbox_1_selected.get()  and leverage_1 != '' and not errors_detected:
+        if self.checkbox_1_selected.get() and leverage_1 != '' and not errors_detected:
             try:
                 values_to_be_inserted.append((self.spinbox_var_1.get(), float(leverage_1)))
             except ValueError:
@@ -1830,7 +1831,7 @@ class InsertLeveragePage(ParentInsertPage):
                                          "Please specify a leverage value or toggle a checkbox.")
             errors_detected = True
 
-        if self.checkbox_2_selected and leverage_2 != '' and not errors_detected:
+        if self.checkbox_2_selected.get() and leverage_2 != '' and not errors_detected:
             try:
                 values_to_be_inserted.append((self.spinbox_var_2.get(), float(leverage_2)))
             except ValueError:

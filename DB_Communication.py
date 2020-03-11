@@ -602,7 +602,7 @@ def insert_leverages(db_connection, values):
         query = create_insert_into_statement("leverages", column_names)
 
         for i in range(len(values["year"])):
-            sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values["ROA"][i],
+            sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values["leverage"][i],
                                        values["valid_from"][i], values["valid_to"][i]))
 
         db_connection.commit()
