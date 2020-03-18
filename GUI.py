@@ -1378,7 +1378,7 @@ class InsertProfitsPage(ParentInsertPage):
                                                        ])})
 
             # finally perform insert into db
-            error = DB_Communication.insert_into_data_table(self.db_connection,self.insert_type, values_per_entry)
+            error = DB_Communication.insert_into_data_table(self.db_connection, self.insert_type, values_per_entry)
 
             if error is None:
                 self.update_frame()
@@ -1522,7 +1522,7 @@ class InsertCashflowPage(ParentInsertPage):
                                                        ])})
 
             # finally perform insert into db
-            error = DB_Communication.insert_into_data_table(self.db_connection,self.insert_type, values_per_entry)
+            error = DB_Communication.insert_into_data_table(self.db_connection, self.insert_type, values_per_entry)
 
             if error is None:
                 self.update_frame()
@@ -1704,7 +1704,7 @@ class InsertROAPage(ParentInsertPage):
                                                        ])})
 
             # finally perform insert into db
-            error = DB_Communication.insert_into_data_table(self.db_connection,self.insert_type, values_per_entry)
+            error = DB_Communication.insert_into_data_table(self.db_connection, self.insert_type, values_per_entry)
 
             if error is None:
                 self.update_frame()

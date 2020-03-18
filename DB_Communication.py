@@ -583,6 +583,7 @@ def insert_into_data_table(db_connection, table_name, values):
 
     error_message = None
     try:
+
         sql_cursor = db_connection.cursor()
 
         column_names = get_column_names_from_db_table(sql_cursor, table_name + "s")
@@ -592,13 +593,21 @@ def insert_into_data_table(db_connection, table_name, values):
 
         query = create_insert_into_statement(table_name + "s", column_names)
 
-        for i in range(len(values["year"])):
-            sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values[table_name][i],
-                                       values["valid_from"][i], values["valid_to"][i]))
+        # special case for profit page due to different column
+        if table_name == "profit":
+            for i in range(len(values["year"])):
+                sql_cursor.execute(query, (values["year"][i], values["share_ID"][i], values[table_name][i],
+                                           values["valid_from"][i], values["valid_to"][i]))
+        else:
+            for i in range(len(values["year"])):
+
+                sql_cursor.execute(query, (values["share_ID"][i], values["year"][i], values[table_name][i],
+                                           values["valid_from"][i], values["valid_to"][i]))
 
         db_connection.commit()
 
     except BaseException as e:
-        error_message = e
+
+        error_message = str(e)
 
     return error_message
