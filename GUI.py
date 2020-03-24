@@ -1044,6 +1044,17 @@ class ParentInsertPage(BasicPage):
         self.scrolledtext_data = ScrolledText(self, width=25, height=11, wrap='word')
         self.scrolledtext_data.place(x=750, y=300, anchor='center')
 
+        # create list for all entry elements
+        self.list_entries = []
+
+        # create list for all checkbox elements
+        self.list_checkboxes = []
+        self.list_checkboxes_vars = []
+
+        # create list for all spinbox elements
+        self.list_spinboxes = []
+        self.list_spinboxes_vars = []
+
     def update_frame(self):
         """
            update the frame's components
@@ -1062,6 +1073,21 @@ class ParentInsertPage(BasicPage):
 
         # reset scrolledtext
         self.scrolledtext_data.delete('1.0', tk.END)
+
+        # reset all spinboxes
+        for idx, each_spinbox in enumerate(self.list_spinboxes_vars):
+            each_spinbox.set(value=self.create_five_year_range()[(-1) * (idx + 1)])
+
+        # clear all entries
+        for each_entry in self.list_entries:
+            each_entry.delete(0, tk.END)
+
+        # set all checkboxes to be not selected
+        for each_checkbox_var in self.list_checkboxes_vars:
+            each_checkbox_var.set(True)
+
+        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
+        self.combobox_shares.set_completion_list(self.df_shares.company_name)
 
     @staticmethod
     def create_five_year_range():
@@ -1113,7 +1139,117 @@ class ParentInsertPage(BasicPage):
         Placeholder method
         :return: None
         """
-        pass
+
+        errors_detected = False
+
+        # get the current share ID selected in the combobox
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror(title="No selection",
+                                 message="No combobox item selected! \n"
+                                         "Please select a share to which the " + self.insert_type +
+                                         " value should refer.")
+            errors_detected = True
+
+        # get the inserted data values
+        list_data_values = []
+        for each_entry in self.list_entries:
+            list_data_values.append(each_entry.get())
+
+        values_to_be_inserted = []
+
+        # control for each checkbox whether inputs are valid and consistent
+        # - if a checkbox is selected the corresponding value has to be inserted
+        # - the inserted value has to be a float
+
+        for each_checkbox_var, each_value, i in zip(self.list_checkboxes_vars, list_data_values,
+                                                    range(len(list_data_values))):
+
+            if not errors_detected:
+
+                if each_checkbox_var.get() and each_value == '':
+                    messagebox.showerror(title="Missing " + self.insert_type + "s",
+                                         message=self.insert_type + " input is empty, \n"
+                                                 "Please specify a " + self.insert_type + " value or toggle a checkbox.")
+                    errors_detected = True
+
+                if each_checkbox_var.get() and each_value != '':
+                    try:
+                        values_to_be_inserted.append((self.list_spinboxes_vars[i].get(), float(each_value)))
+                    except ValueError:
+                        messagebox.showerror(title="Value Error",
+                                             message="Please insert a number as " + self.insert_type + "value.")
+                        errors_detected = True
+
+        # show a message if none of the checkboxes are selected
+        if not errors_detected:
+            for idx, each_checkbox_var in enumerate(self.list_checkboxes_vars):
+                errors_detected = False  # should only be true if all checkboxes are empty
+                if not errors_detected and not each_checkbox_var.get():
+                    errors_detected = True
+                else:
+                    break
+
+            if errors_detected:
+                messagebox.showerror(title="Empty Statement",
+                                     message="None of the checkboxes are selected. \n"
+                                             "Accordingly, no values will be inserted. \n"
+                                             "Please select at least one combobox.")
+
+        list_existing_years = []
+        if not errors_detected:
+            # get a list of years for which values are already in the database (only for current insert type)
+            list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
+                                                                                self.insert_type + "s",
+                                                                                self.current_share_id)
+
+        list_duplicated_years = []
+
+        # catch each year which has already a value of the insert type
+        for y, p in values_to_be_inserted:
+            if y in list_existing_years:
+                list_duplicated_years.append(y)
+
+        # show message which years are already existent
+        if len(list_duplicated_years) > 0 and not errors_detected:
+            message_text = self.insert_type + "(s) for "
+
+            for each_year in list_duplicated_years:
+                message_text += str(each_year) + " "
+
+            message_text += "already exist(s). \nPlease use Update section to change the values."
+            messagebox.showerror(title="Year(s) exist already",
+                                 message=message_text)
+            errors_detected = True
+
+        values_per_entry = {}
+
+        # if no errors are found so far, we can insert the values in the database
+        if not errors_detected:
+
+            ts_current_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # create a dictionary with all values for each year
+            values_per_entry.update({"year": list([y for y,p in values_to_be_inserted])})
+            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
+                                                       ])})
+            values_per_entry.update({self.insert_type: list([p for y,p in values_to_be_inserted])})
+            values_per_entry.update({"valid_from": list([ts_current_time for i in range(len(values_to_be_inserted))])})
+            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
+                                                       ])})
+
+            # finally perform insert into db
+            error = DB_Communication.insert_into_data_table(self.db_connection, self.insert_type, values_per_entry)
+
+            if error is None:
+                self.update_frame()
+                messagebox.showinfo(title="Success!",
+                                    message="The configured data has been successfully created in the database.")
+            else:
+                messagebox.showerror(title="DB Error",
+                                     message="An error has occurred. Please try again."
+                                             "In case the error remains, please restart the application.")
 
 
 class InsertProfitsPage(ParentInsertPage):
@@ -1128,78 +1264,103 @@ class InsertProfitsPage(ParentInsertPage):
 
         # create checkbox for first year
         self.checkbox_1_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_1_selected)
         self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
         self.checkbox_year_1.place(x=125, y=200, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_1)
 
         # create input box for year 1
         self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.list_spinboxes_vars.append(self.spinbox_var_1)
         self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_1)
         self.spinbox_year_1.place(x=225, y=200, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_1)
 
         # create input for profit 1
         self.entry_profit_1 = ttk.Entry(self)
         self.entry_profit_1.place(x=425, y=200, anchor='center')
+        self.list_entries.append(self.entry_profit_1)
 
         # create checkbox for year 2
         self.checkbox_2_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_2_selected)
         self.checkbox_year_2 = ttk.Checkbutton(self, var=self.checkbox_2_selected)
         self.checkbox_year_2.place(x=125, y=250, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_2)
 
         # create input box for year 2
         self.spinbox_var_2 = tk.IntVar(value=self.create_five_year_range()[-2])
+        self.list_spinboxes_vars.append(self.spinbox_var_2)
         self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_2)
         self.spinbox_year_2.place(x=225, y=250, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_2)
 
         # create input for profit 2
         self.entry_profit_2 = ttk.Entry(self)
         self.entry_profit_2.place(x=425, y=250, anchor='center')
+        self.list_entries.append(self.entry_profit_2)
 
         # create checkbox for year 3
         self.checkbox_3_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_3_selected)
         self.checkbox_year_3 = ttk.Checkbutton(self, var=self.checkbox_3_selected)
         self.checkbox_year_3.place(x=125, y=300, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_3)
 
         # create input box for year 3
         self.spinbox_var_3 = tk.IntVar(value=self.create_five_year_range()[-3])
+        self.list_spinboxes_vars.append(self.spinbox_var_3)
         self.spinbox_year_3 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_3)
         self.spinbox_year_3.place(x=225, y=300, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_3)
 
         # create input for profit 3
         self.entry_profit_3 = ttk.Entry(self)
         self.entry_profit_3.place(x=425, y=300, anchor='center')
+        self.list_entries.append(self.entry_profit_3)
 
         # create checkbox for year 4
         self.checkbox_4_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_4_selected)
         self.checkbox_year_4 = ttk.Checkbutton(self, var=self.checkbox_4_selected)
         self.checkbox_year_4.place(x=125, y=350, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_4)
 
         # create input box for year 4
         self.spinbox_var_4 = tk.IntVar(value=self.create_five_year_range()[-4])
+        self.list_spinboxes_vars.append(self.spinbox_var_4)
         self.spinbox_year_4 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_4)
         self.spinbox_year_4.place(x=225, y=350, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_4)
 
         # create input for profit 4
         self.entry_profit_4 = ttk.Entry(self)
         self.entry_profit_4.place(x=425, y=350, anchor='center')
+        self.list_entries.append(self.entry_profit_4)
 
         # create checkbox for year 5
         self.checkbox_5_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_5_selected)
         self.checkbox_year_5 = ttk.Checkbutton(self, var=self.checkbox_5_selected)
         self.checkbox_year_5.place(x=125, y=400, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_5)
 
         # create input box for year 5
         self.spinbox_var_5 = tk.IntVar(value=self.create_five_year_range()[-5])
+        self.list_spinboxes_vars.append(self.spinbox_var_5)
         self.spinbox_year_5 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_5)
         self.spinbox_year_5.place(x=225, y=400, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_5)
 
         # create input for profit 5
         self.entry_profit_5 = ttk.Entry(self)
         self.entry_profit_5.place(x=425, y=400, anchor='center')
+        self.list_entries.append(self.entry_profit_5)
 
     def update_frame(self):
         """
@@ -1208,184 +1369,6 @@ class InsertProfitsPage(ParentInsertPage):
         """
 
         self.update_parent_elements_on_frame()
-
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
-        # set all checkboxes to be not selected
-        self.checkbox_1_selected.set(True)
-        self.checkbox_2_selected.set(True)
-        self.checkbox_3_selected.set(True)
-        self.checkbox_4_selected.set(True)
-        self.checkbox_5_selected.set(True)
-
-        # clear all entries
-        self.entry_profit_1.delete(0, tk.END)
-        self.entry_profit_2.delete(0, tk.END)
-        self.entry_profit_3.delete(0, tk.END)
-        self.entry_profit_4.delete(0, tk.END)
-        self.entry_profit_5.delete(0, tk.END)
-
-        # reset all spinboxes
-        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
-        self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
-        self.spinbox_var_3.set(value=self.create_five_year_range()[-3])
-        self.spinbox_year_4.set(value=self.create_five_year_range()[-4])
-        self.spinbox_year_5.set(value=self.create_five_year_range()[-5])
-
-    def insert_data_in_db(self):
-        """
-                Perform several validity checks for the user input.
-                If no errors are detected, create the inserted profit values in the database
-                :return: None
-                """
-
-        errors_detected = False
-
-        # get current share id from combobox
-        try:
-            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
-        except IndexError:
-            messagebox.showerror("No selection", "No combobox item selected! \n"
-                                                 "Please select a share to which the profits should refer.")
-            errors_detected = True
-
-        # get all inserted profit values
-        profit_1 = self.entry_profit_1.get()
-        profit_2 = self.entry_profit_2.get()
-        profit_3 = self.entry_profit_3.get()
-        profit_4 = self.entry_profit_4.get()
-        profit_5 = self.entry_profit_5.get()
-
-        values_to_be_inserted = []
-
-        # control for each checkbox whether inputs are valid and consistent
-        # - if a checkbox is selected, the corresponding profit have to be stated
-        # - the inserted profit has to be a float
-        if self.checkbox_1_selected.get() and profit_1 == "" and not errors_detected:
-            messagebox.showerror("Missing Profit", "First profit input is empty. \n"
-                                                   "Please specify the corresponding profit value or "
-                                                   "toggle the checkbox.")
-            errors_detected = True
-
-        if self.checkbox_1_selected.get() and profit_1 != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_1.get(), float(profit_1)))
-            except ValueError:
-                messagebox.showerror("Value Error", "Please insert a number as profit.")
-                errors_detected = True
-
-        if self.checkbox_2_selected.get() and profit_2 == "" and not errors_detected:
-            messagebox.showerror("Missing Profit", "Second profit input is empty. \n"
-                                                   "Please specify the corresponding profit value or "
-                                                   "toggle the checkbox.")
-            errors_detected = True
-
-        if self.checkbox_2_selected.get() and profit_2 != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_2.get(), float(profit_2)))
-            except ValueError:
-                messagebox.showerror("Value Error", "Please insert a number as profit.")
-                errors_detected = True
-
-        if self.checkbox_3_selected.get() and profit_3 == "" and not errors_detected:
-            messagebox.showerror("Missing Profit", "Third profit input is empty. \n"
-                                                   "Please specify the corresponding profit value or "
-                                                   "toggle the checkbox.")
-            errors_detected = True
-
-        if self.checkbox_3_selected.get() and profit_3 != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_3.get(), float(profit_3)))
-            except ValueError:
-                messagebox.showerror("Value Error", "Please insert a number as profit.")
-                errors_detected = True
-        if self.checkbox_4_selected.get() and profit_4 == "" and not errors_detected:
-            messagebox.showerror("Missing Profit", "Fourth profit input is empty. \n"
-                                                   "Please specify the corresponding profit value or "
-                                                   "toggle the checkbox.")
-            errors_detected = True
-
-        if self.checkbox_4_selected.get() and profit_4 != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_4.get(), float(profit_4)))
-            except ValueError:
-                messagebox.showerror("Value Error", "Please insert a number as profit.")
-                errors_detected = True
-
-        if self.checkbox_5_selected.get() and profit_5 == "" and not errors_detected:
-            messagebox.showerror("Missing Profit", "Fifth profit input is empty. \n"
-                                                   "Please specify the corresponding profit value or "
-                                                   "toggle the checkbox.")
-            errors_detected = True
-
-        if self.checkbox_5_selected.get() and profit_5 != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_5.get(), float(profit_5)))
-            except ValueError:
-                messagebox.showerror("Value Error", "Please insert a number as profit.")
-                errors_detected = True
-
-        # show message if none of the checkboxes is selected
-        if not self.checkbox_5_selected.get() and \
-                not self.checkbox_4_selected.get() and \
-                not self.checkbox_3_selected.get() and \
-                not self.checkbox_2_selected.get() and \
-                not self.checkbox_1_selected.get() and \
-                not errors_detected:
-            messagebox.showerror("Empty Statement", "None of the checkboxes are selected.\n"
-                                                    "Accordingly, no values will be inserted.\n"
-                                                    "Please select at least once.")
-            errors_detected = True
-
-        # get list of years for which profit values are already in the database
-        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(), "profits",
-                                                                            self.current_share_id)
-
-        list_duplicated_years = []
-
-        # catch each year which has already a profit value
-        for y, p in values_to_be_inserted:
-            if y in list_existing_years:
-                list_duplicated_years.append(y)
-
-        # show message which years are already existent
-        if len(list_duplicated_years) > 0 and not errors_detected:
-            message_text = "Profits for "
-
-            for each_year in list_duplicated_years:
-                message_text += str(each_year) + " "
-
-            message_text += "already exist. \nPlease use Update section to change the values."
-            messagebox.showerror("Year(s) exist already", message_text)
-            errors_detected = True
-
-        values_per_entry = {}
-
-        # if so far no errors are found, we can insert the values in the database
-        if not errors_detected:
-
-            ts_curr_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # create a dictionary with all values for each year
-            values_per_entry.update({"year": list([y for y, p in values_to_be_inserted])})
-            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
-                                                       ])})
-            values_per_entry.update({"profit": list([p for y, p in values_to_be_inserted])})
-            values_per_entry.update({"valid_from": list([ts_curr_time for i in range(len(values_to_be_inserted))])})
-            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
-                                                       ])})
-
-            # finally perform insert into db
-            error = DB_Communication.insert_profits(self.db_connection, values_per_entry)
-
-            if error is None:
-                self.update_frame()
-                messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
-            else:
-                messagebox.showerror("DB Error", "An error has occured. Please try again."
-                                                 "In case the error remains, please restart the application")
 
 
 class InsertCashflowPage(ParentInsertPage):
@@ -1401,18 +1384,22 @@ class InsertCashflowPage(ParentInsertPage):
 
         # create checkbox for first year
         self.checkbox_1_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_1_selected)
         self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
         self.checkbox_year_1.place(x=125, y=200, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_1)
 
         # create input box for year 1
         self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.list_spinboxes_vars.append(self.spinbox_var_1)
         self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_1)
         self.spinbox_year_1.place(x=225, y=200, anchor='center')
-
+        self.list_spinboxes.append(self.spinbox_year_1)
         # create input for cashflow 1
         self.entry_cashflow_1 = ttk.Entry(self)
         self.entry_cashflow_1.place(x=425, y=200, anchor='center')
+        self.list_entries.append(self.entry_cashflow_1)
 
         # rearrange insert button
         self.button_insert_data.place(x=480, y=325, anchor='center')
@@ -1424,112 +1411,6 @@ class InsertCashflowPage(ParentInsertPage):
         """
 
         self.update_parent_elements_on_frame()
-
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
-        # set all checkboxes to be not selected
-        self.checkbox_1_selected.set(True)
-
-        # clear all entries
-        self.entry_cashflow_1.delete(0, tk.END)
-
-        # reset all spinboxes
-        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
-
-    def insert_data_in_db(self):
-        """
-        Perform several validity checks for the user input.
-        If no errors are detected, create the inserted cashflow value in the database
-        :return: None
-        """
-
-        errors_detected = False
-
-        # get current share id from combobox
-        try:
-            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
-        except IndexError:
-            messagebox.showerror("No selection", "No combobox item selected! \n"
-                                                 "Please select a share to which the cashflows should refer.")
-            errors_detected = True
-
-        # get the inserted cashflow value
-        cashflow = self.entry_cashflow_1.get()
-
-        values_to_be_inserted = []
-
-        # control for each checkbox whether inputs are valid and consistent
-        # - if a checkbox is selected, the corresponding profit have to be started
-        # - the inserted chasflow has to be a float
-        if self.checkbox_1_selected.get() and cashflow == "" and not errors_detected:
-            messagebox.showerror("Missing Cashflow", "Cashflow input is empty. \n"
-                                                     "Please specify the cashflow value or toggle the checkbox.")
-            errors_detected = True
-
-        if self.checkbox_1_selected.get() and cashflow != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_1.get(), float(cashflow)))
-            except ValueError:
-                messagebox.showerror("Value Error", "Please insert a number as profit.")
-                errors_detected = True
-
-        # show message if the checkbox is not selected
-        if not self.checkbox_1_selected and not errors_detected:
-            messagebox.showerror("Empty Statement", "The checkbox is not selected. \n" 
-                                                    "Accordingly, no values will be inserted. \n" 
-                                                    "Please select the checkbox.")
-            errors_detected = True
-
-        # get list of years for which cashflow values are already in the database
-        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
-                                                                            self.insert_type + "s",
-                                                                            self.current_share_id)
-
-        list_duplicated_years = []
-
-        # catch each year which has already a cashflow value
-        for y, p in values_to_be_inserted:
-            if y in list_existing_years:
-                list_duplicated_years.append(y)
-
-        # show message which years are already existent
-        if len(list_duplicated_years) > 0 and not errors_detected:
-            message_text = "Cahsflows for "
-
-            for each_year in list_duplicated_years:
-                message_text += str(each_year) + " "
-
-            message_text += "already exist. \nPlease use Update section to change the values."
-            messagebox.showerror("Year(s) exist already", message_text)
-            errors_detected = True
-
-        values_per_entry = {}
-
-        # if no errors are found so far, we can insert the values in the database
-        if not errors_detected:
-
-            ts_curr_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # create a dictionary with all values for each year
-            values_per_entry.update({"year": list([y for y, p in values_to_be_inserted])})
-            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
-                                                       ])})
-            values_per_entry.update({self.insert_type: list([p for y, p in values_to_be_inserted])})
-            values_per_entry.update({"valid_from": list([ts_curr_time for i in range(len(values_to_be_inserted))])})
-            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
-                                                       ])})
-
-            # finally perform insert into db
-            error = DB_Communication.insert_cashflows(self.db_connection, values_per_entry)
-
-            if error is None:
-                self.update_frame()
-                messagebox.showinfo("Success!", "The configured has been successfully created in the database.")
-            else:
-                messagebox.showerror("DB Error", "An error has occurred. Please try again."
-                                     "In case the error remains, please restart the application")
 
 
 class InsertROAPage(ParentInsertPage):
@@ -1544,33 +1425,43 @@ class InsertROAPage(ParentInsertPage):
 
         # create checkbox for first year
         self.checkbox_1_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_1_selected)
         self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
         self.checkbox_year_1.place(x=125, y=200, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_1)
 
         # create input box for year 1
         self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.list_spinboxes_vars.append(self.spinbox_var_1)
         self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_1)
         self.spinbox_year_1.place(x=225, y=200, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_1)
 
         # create input for ROA 1
         self.entry_roa_1 = ttk.Entry(self)
         self.entry_roa_1.place(x=425, y=200, anchor='center')
+        self.list_entries.append(self.entry_roa_1)
 
         # create checkbox for second year
         self.checkbox_2_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_2_selected)
         self.checkbox_year_2 = ttk.Checkbutton(self, var=self.checkbox_2_selected)
         self.checkbox_year_2.place(x=125, y=250, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_2)
 
         # create input box for year 2
         self.spinbox_var_2 = tk.IntVar(value=self.create_five_year_range()[-2])
+        self.list_spinboxes_vars.append(self.spinbox_var_2)
         self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_2)
         self.spinbox_year_2.place(x=225, y=250, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_2)
 
         # create input for ROA 2
         self.entry_roa_2 = ttk.Entry(self)
         self.entry_roa_2.place(x=425, y=250, anchor='center')
+        self.list_entries.append(self.entry_roa_2)
 
         # rearrange insert button
         self.button_insert_data.place(x=480, y=375, anchor='center')
@@ -1582,138 +1473,6 @@ class InsertROAPage(ParentInsertPage):
         """
 
         self.update_parent_elements_on_frame()
-
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
-        # set all checkboxes to be not selected
-        self.checkbox_1_selected.set(True)
-        self.checkbox_2_selected.set(True)
-
-        # clear all entries
-        self.entry_roa_1.delete(0, tk.END)
-        self.entry_roa_2.delete(0, tk.END)
-
-        # reset all spinboxes
-        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
-        self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
-
-    def insert_data_in_db(self):
-        """
-        Perform several validity checks for the user input.
-        If no errors are detected, create the inserted ROA values in the database
-        :return: None
-        """
-
-        errors_detected = False
-
-        # get current share id selected in combobox
-        try:
-            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
-        except IndexError:
-            messagebox.showerror(title="No selection",
-                                 message="No combobox item selected! \n"
-                                         "Please select a share to which the ROA should refer.")
-            errors_detected = True
-
-        # get the inserted ROA values
-        roa_1 = self.entry_roa_1.get()
-        roa_2 = self.entry_roa_2.get()
-
-        values_to_be_inserted = []
-
-        # control for each checkbox whether inputs are valid and consistent
-        # - if a checkbox is selected the corresponding ROA has to be
-        # - the inserted ROA has to be a float
-        if self.checkbox_1_selected.get() and roa_1 == '' and not errors_detected:
-            messagebox.showerror(title="Missing ROAs",
-                                 message="ROA input is empty. \n"
-                                         "Please specify a ROA value or toggle a checkbox.")
-            errors_detected = True
-
-        if self.checkbox_1_selected.get() and roa_1 != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_1.get(), float(roa_1)))
-            except ValueError:
-                messagebox.showerror(title="Value Error",
-                                     message="Please insert a number as ROA")
-                errors_detected = True
-
-        if self.checkbox_2_selected.get() and roa_2 == "" and not errors_detected:
-            messagebox.showerror(title="Missing ROAs",
-                                 message="ROA input is empty. \n"
-                                         "Please specify a ROA value or toggle a checkbox.")
-            errors_detected = True
-
-        if self.checkbox_2_selected.get() and roa_2 != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_2.get(), float(roa_2)))
-            except ValueError:
-                messagebox.showerror(title="Value Error",
-                                     message="Please insert a number as ROA")
-                errors_detected = True
-
-        # show message if none of the checkboxes are selected
-        if not self.checkbox_1_selected and \
-           not self.checkbox_2_selected and \
-           not errors_detected:
-            messagebox.showerror(title="Empty Statement",
-                                 message="None of the checkboxes are selected. \n"
-                                         "Accordingly, no values will be inserted. \n"
-                                         "Please select at least one combobox.")
-            errors_detected = True
-
-        # get list of years for which ROA values are already in the database
-        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
-                                                                            self.insert_type + "s",
-                                                                            self.current_share_id)
-        list_duplicated_years = []
-
-        # catch each year which has already a ROA value
-        for y, p in values_to_be_inserted:
-            if y in list_existing_years:
-                list_duplicated_years.append(y)
-
-        # show message which years are already existent
-        if len(list_duplicated_years) > 0 and not errors_detected:
-            message_text = "ROA(s) for "
-
-            for each_year in list_duplicated_years:
-                message_text += str(each_year) + " "
-
-            message_text += "already exist(s). \nPlease use Update section to change the values."
-            messagebox.showerror(title="Year(s) exist already",
-                                 message=message_text)
-            errors_detected = True
-
-        values_per_entry = {}
-
-        # if no errors are found so far, we can insert the values in the database
-        if not errors_detected:
-
-            ts_current_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # create a dictionary with all values for each year
-            values_per_entry.update({"year": list([y for y, p in values_to_be_inserted])})
-            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
-                                                       ])})
-            values_per_entry.update({self.insert_type: list([p for y, p in values_to_be_inserted])})
-            values_per_entry.update({"valid_from": list([ts_current_time for i in range(len(values_to_be_inserted))])})
-            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
-                                                       ])})
-
-            # finally perform insert into db
-            error = DB_Communication.insert_roas(self.db_connection, values_per_entry)
-
-            if error is None:
-                self.update_frame()
-                messagebox.showinfo(title="Success!",
-                                    message="The configured has been successfully created in the database.")
-            else:
-                messagebox.showerror(title="DB Error",
-                                     message="An error has occurred. Please try again."
-                                             "In case the error remains, please restart the application")
 
 
 class InsertLeveragePage(ParentInsertPage):
@@ -1728,33 +1487,43 @@ class InsertLeveragePage(ParentInsertPage):
 
         # create checkbox for first year
         self.checkbox_1_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_1_selected)
         self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
         self.checkbox_year_1.place(x=125, y=200, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_1)
 
         # create input box for year 1
         self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.list_spinboxes_vars.append(self.spinbox_var_1)
         self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_1)
         self.spinbox_year_1.place(x=225, y=200, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_1)
 
         # create input for leverage 1
         self.entry_leverage_1 = ttk.Entry(self)
         self.entry_leverage_1.place(x=425, y=200, anchor='center')
+        self.list_entries.append(self.entry_leverage_1)
 
         # create checkbox for second year
         self.checkbox_2_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_2_selected)
         self.checkbox_year_2 = ttk.Checkbutton(self, var=self.checkbox_2_selected)
         self.checkbox_year_2.place(x=125, y=250, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_2)
 
         # create input box for year 2
         self.spinbox_var_2 = tk.IntVar(value=self.create_five_year_range()[-2])
+        self.list_spinboxes_vars.append(self.spinbox_var_2)
         self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_2)
         self.spinbox_year_2.place(x=225, y=250, anchor='center')
+        self.list_checkboxes.append(self.spinbox_year_2)
 
         # create input for leverage 2
         self.entry_leverage_2 = ttk.Entry(self)
         self.entry_leverage_2.place(x=425, y=250, anchor='center')
+        self.list_entries.append(self.entry_leverage_2)
 
         # rearrange insert button
         self.button_insert_data.place(x=480, y=375, anchor='center')
@@ -1766,136 +1535,3 @@ class InsertLeveragePage(ParentInsertPage):
         """
 
         self.update_parent_elements_on_frame()
-
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
-        # set all checkboxes to be not selected
-        self.checkbox_1_selected.set(True)
-        self.checkbox_2_selected.set(True)
-
-        # clear all entries
-        self.entry_leverage_1.delete(0, tk.END)
-        self.entry_leverage_2.delete(0, tk.END)
-
-        # reset all spinboxes
-        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
-        self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
-
-    def insert_data_in_db(self):
-        """
-        Perform several validity checks for the user input.
-        If no errors are detected, create the inserted leverage values in the database.
-        :return: None
-        """
-
-        errors_detected = False
-
-        # get the current share id selected in the combobox
-        try:
-            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
-        except IndexError:
-            messagebox.showerror(title="No selection",
-                                 message="No combobox item selected! \n" 
-                                         "Please select a share to which the leverage value should refer.")
-            errors_detected = True
-
-        # get the inserted leverage values
-        leverage_1 = self.entry_leverage_1.get()
-        leverage_2 = self.entry_leverage_2.get()
-
-        values_to_be_inserted = []
-
-        # control for each checkbox whether inputs are valid and consistent
-        # - if a checkbox is selected the corresponding leverage value has to be inserted
-        # - the inserted leverage value has to be a float
-
-        if self.checkbox_1_selected.get() and leverage_1 == '' and not errors_detected:
-            messagebox.showerror(title="Missing leverages",
-                                 message="Leverage input is empty, \n" 
-                                         "Please specify a leverage value or toggle a checkbox.")
-            errors_detected = True
-
-        if self.checkbox_1_selected.get() and leverage_1 != '' and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_1.get(), float(leverage_1)))
-            except ValueError:
-                messagebox.showerror(title="Value Error",
-                                     message="Please insert a number as leverage")
-                errors_detected = True
-
-        if self.checkbox_2_selected.get() and leverage_2 == '' and not errors_detected:
-            messagebox.showerror(title="Missing leverages",
-                                 message="Leverage input is empty, \n"
-                                         "Please specify a leverage value or toggle a checkbox.")
-            errors_detected = True
-
-        if self.checkbox_2_selected.get() and leverage_2 != '' and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_2.get(), float(leverage_2)))
-            except ValueError:
-                messagebox.showerror(title="Value Error",
-                                     message="Please insert a number as leverage")
-                errors_detected = True
-
-        # show message if none of the checkboxes are selected
-        if not self.checkbox_1_selected and \
-           not self.checkbox_2_selected and \
-           not errors_detected:
-            messagebox.showerror(title="Empty Statement",
-                                 message="None of the checkboxes are selected. \n"
-                                         "Accordingly, no values will be inserted. \n"
-                                         "Please select al least one combobox.")
-            errors_detected = True
-
-        # get list of years for which leverage values are already in the database
-        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
-                                                                            self.insert_type + "s",
-                                                                            self.current_share_id)
-        list_duplicated_years = []
-
-        # catch each year which has already a leverage value
-        for y, p in values_to_be_inserted:
-            if y in list_existing_years:
-                list_duplicated_years.append(y)
-
-        # show message which years are already existent
-        if len(list_duplicated_years) > 0 and not errors_detected:
-            message_text = "Leverage(s) for "
-
-            for each_year in list_duplicated_years:
-                message_text += str(each_year) + " "
-
-            message_text += "already exist(s). \nPlease use Update section to change the values."
-            messagebox.showerror(title="Year(s) exist already",
-                                 message=message_text)
-            errors_detected = True
-
-        values_per_entry = {}
-
-        # if no errors are found so far, we can insert the values in the database
-        if not errors_detected:
-
-            ts_current_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # create a dictionary with all values for each year
-            values_per_entry.update({"year": list([y for y, p in values_to_be_inserted])})
-            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
-                                                       ])})
-            values_per_entry.update({self.insert_type:  list([p for y, p in values_to_be_inserted])})
-            values_per_entry.update({"valid_from": list([ts_current_time for i in range(len(values_to_be_inserted))])})
-            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
-                                                       ])})
-
-            # finally perform insert into db
-            error = DB_Communication.insert_into_data_table(self.db_connection, self.insert_type, values_per_entry)
-
-            if error is None:
-                self.update_frame()
-                messagebox.showinfo(title="Success!",
-                                    message="The configured has been successfully created in the database.")
-            else:
-                messagebox.showerror(title="DB Error",
-                                     message="An error has occurred. Please try again."
-                                             "In case the error remains, please restart the application")
