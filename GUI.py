@@ -1074,6 +1074,18 @@ class ParentInsertPage(BasicPage):
         # reset scrolledtext
         self.scrolledtext_data.delete('1.0', tk.END)
 
+        # reset all spinboxes
+        for idx, each_spinbox in enumerate(self.list_spinboxes_vars):
+            each_spinbox.set(value=self.create_five_year_range()[(-1) * (idx + 1)])
+
+        # clear all entries
+        for each_entry in self.list_entries:
+            each_entry.delete(0, tk.END)
+
+        # set all checkboxes to be not selected
+        for each_checkbox_var in self.list_checkboxes_vars:
+            each_checkbox_var.set(True)
+
     @staticmethod
     def create_five_year_range():
         # TODO: sinnvollen Ort dafür finden
@@ -1359,27 +1371,6 @@ class InsertProfitsPage(ParentInsertPage):
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
 
-        # set all checkboxes to be not selected
-        self.checkbox_1_selected.set(True)
-        self.checkbox_2_selected.set(True)
-        self.checkbox_3_selected.set(True)
-        self.checkbox_4_selected.set(True)
-        self.checkbox_5_selected.set(True)
-
-        # clear all entries
-        self.entry_profit_1.delete(0, tk.END)
-        self.entry_profit_2.delete(0, tk.END)
-        self.entry_profit_3.delete(0, tk.END)
-        self.entry_profit_4.delete(0, tk.END)
-        self.entry_profit_5.delete(0, tk.END)
-
-        # reset all spinboxes
-        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
-        self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
-        self.spinbox_var_3.set(value=self.create_five_year_range()[-3])
-        self.spinbox_year_4.set(value=self.create_five_year_range()[-4])
-        self.spinbox_year_5.set(value=self.create_five_year_range()[-5])
-
 
 class InsertCashflowPage(ParentInsertPage):
     """
@@ -1425,15 +1416,6 @@ class InsertCashflowPage(ParentInsertPage):
         # update sector combobox
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
-        # set all checkboxes to be not selected
-        self.checkbox_1_selected.set(True)
-
-        # clear all entries
-        self.entry_cashflow_1.delete(0, tk.END)
-
-        # reset all spinboxes
-        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
 
 
 class InsertROAPage(ParentInsertPage):
@@ -1501,18 +1483,6 @@ class InsertROAPage(ParentInsertPage):
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
 
-        # set all checkboxes to be not selected
-        self.checkbox_1_selected.set(True)
-        self.checkbox_2_selected.set(True)
-
-        # clear all entries
-        self.entry_roa_1.delete(0, tk.END)
-        self.entry_roa_2.delete(0, tk.END)
-
-        # reset all spinboxes
-        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
-        self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
-
 
 class InsertLeveragePage(ParentInsertPage):
     """
@@ -1578,15 +1548,3 @@ class InsertLeveragePage(ParentInsertPage):
         # update sector combobox
         self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
         self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
-        # set all checkboxes to be not selected
-        self.checkbox_1_selected.set(True)
-        self.checkbox_2_selected.set(True)
-
-        # clear all entries
-        self.entry_leverage_1.delete(0, tk.END)
-        self.entry_leverage_2.delete(0, tk.END)
-
-        # reset all spinboxes
-        self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
-        self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
