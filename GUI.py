@@ -1086,6 +1086,9 @@ class ParentInsertPage(BasicPage):
         for each_checkbox_var in self.list_checkboxes_vars:
             each_checkbox_var.set(True)
 
+        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
+        self.combobox_shares.set_completion_list(self.df_shares.company_name)
+
     @staticmethod
     def create_five_year_range():
         # TODO: sinnvollen Ort dafür finden
@@ -1367,10 +1370,6 @@ class InsertProfitsPage(ParentInsertPage):
 
         self.update_parent_elements_on_frame()
 
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
 
 class InsertCashflowPage(ParentInsertPage):
     """
@@ -1412,10 +1411,6 @@ class InsertCashflowPage(ParentInsertPage):
         """
 
         self.update_parent_elements_on_frame()
-
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
 
 
 class InsertROAPage(ParentInsertPage):
@@ -1479,10 +1474,6 @@ class InsertROAPage(ParentInsertPage):
 
         self.update_parent_elements_on_frame()
 
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
-
 
 class InsertLeveragePage(ParentInsertPage):
     """
@@ -1544,7 +1535,3 @@ class InsertLeveragePage(ParentInsertPage):
         """
 
         self.update_parent_elements_on_frame()
-
-        # update sector combobox
-        self.df_shares = DB_Communication.get_all_shares(self.db_connection.cursor())
-        self.combobox_shares.set_completion_list(self.df_shares.company_name)
