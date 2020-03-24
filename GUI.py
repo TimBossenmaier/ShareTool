@@ -1168,18 +1168,26 @@ class ParentInsertPage(BasicPage):
                         errors_detected = True
 
         # show a message if none of the checkboxes are selected
-        for idx, each_checkbox_var in enumerate(self.list_checkboxes_vars):
-            if not errors_detected and not each_checkbox_var.get():
+        if not errors_detected:
+            for idx, each_checkbox_var in enumerate(self.list_checkboxes_vars):
+                errors_detected = False  # should only be true if all checkboxes are empty
+                if not errors_detected and not each_checkbox_var.get():
+                    errors_detected = True
+                else:
+                    break
+
+            if errors_detected:
                 messagebox.showerror(title="Empty Statement",
                                      message="None of the checkboxes are selected. \n"
                                              "Accordingly, no values will be inserted. \n"
                                              "Please select at least one combobox.")
-                errors_detected = True
 
-        # get a list of years for which values are already in the database (only for current insert type)
-        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
-                                                                            self.insert_type + "s",
-                                                                            self.current_share_id)
+        list_existing_years = []
+        if not errors_detected:
+            # get a list of years for which values are already in the database (only for current insert type)
+            list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
+                                                                                self.insert_type + "s",
+                                                                                self.current_share_id)
 
         list_duplicated_years = []
 
@@ -1208,7 +1216,7 @@ class ParentInsertPage(BasicPage):
             ts_current_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             # create a dictionary with all values for each year
-            values_per_entry.update({"year": list([y  for y,p in values_to_be_inserted])})
+            values_per_entry.update({"year": list([y for y,p in values_to_be_inserted])})
             values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
                                                        ])})
             values_per_entry.update({self.insert_type: list([p for y,p in values_to_be_inserted])})
