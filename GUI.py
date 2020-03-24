@@ -1657,33 +1657,43 @@ class InsertROAPage(ParentInsertPage):
 
         # create checkbox for first year
         self.checkbox_1_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_1_selected)
         self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
         self.checkbox_year_1.place(x=125, y=200, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_1)
 
         # create input box for year 1
         self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.list_spinboxes_vars.append(self.spinbox_var_1)
         self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_1)
         self.spinbox_year_1.place(x=225, y=200, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_1)
 
         # create input for ROA 1
         self.entry_roa_1 = ttk.Entry(self)
         self.entry_roa_1.place(x=425, y=200, anchor='center')
+        self.list_entries.append(self.entry_roa_1)
 
         # create checkbox for second year
         self.checkbox_2_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_2_selected)
         self.checkbox_year_2 = ttk.Checkbutton(self, var=self.checkbox_2_selected)
         self.checkbox_year_2.place(x=125, y=250, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_2)
 
         # create input box for year 2
         self.spinbox_var_2 = tk.IntVar(value=self.create_five_year_range()[-2])
+        self.list_spinboxes_vars.append(self.spinbox_var_2)
         self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_2)
         self.spinbox_year_2.place(x=225, y=250, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_2)
 
         # create input for ROA 2
         self.entry_roa_2 = ttk.Entry(self)
         self.entry_roa_2.place(x=425, y=250, anchor='center')
+        self.list_entries.append(self.entry_roa_2)
 
         # rearrange insert button
         self.button_insert_data.place(x=480, y=375, anchor='center')
@@ -1711,122 +1721,6 @@ class InsertROAPage(ParentInsertPage):
         # reset all spinboxes
         self.spinbox_var_1.set(value=self.create_five_year_range()[-1])
         self.spinbox_var_2.set(value=self.create_five_year_range()[-2])
-
-    def insert_data_in_db(self):
-        """
-        Perform several validity checks for the user input.
-        If no errors are detected, create the inserted ROA values in the database
-        :return: None
-        """
-
-        errors_detected = False
-
-        # get current share id selected in combobox
-        try:
-            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
-        except IndexError:
-            messagebox.showerror(title="No selection",
-                                 message="No combobox item selected! \n"
-                                         "Please select a share to which the ROA should refer.")
-            errors_detected = True
-
-        # get the inserted ROA values
-        roa_1 = self.entry_roa_1.get()
-        roa_2 = self.entry_roa_2.get()
-
-        values_to_be_inserted = []
-
-        # control for each checkbox whether inputs are valid and consistent
-        # - if a checkbox is selected the corresponding ROA has to be
-        # - the inserted ROA has to be a float
-        if self.checkbox_1_selected.get() and roa_1 == '' and not errors_detected:
-            messagebox.showerror(title="Missing ROAs",
-                                 message="ROA input is empty. \n"
-                                         "Please specify a ROA value or toggle a checkbox.")
-            errors_detected = True
-
-        if self.checkbox_1_selected.get() and roa_1 != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_1.get(), float(roa_1)))
-            except ValueError:
-                messagebox.showerror(title="Value Error",
-                                     message="Please insert a number as ROA")
-                errors_detected = True
-
-        if self.checkbox_2_selected.get() and roa_2 == "" and not errors_detected:
-            messagebox.showerror(title="Missing ROAs",
-                                 message="ROA input is empty. \n"
-                                         "Please specify a ROA value or toggle a checkbox.")
-            errors_detected = True
-
-        if self.checkbox_2_selected.get() and roa_2 != "" and not errors_detected:
-            try:
-                values_to_be_inserted.append((self.spinbox_var_2.get(), float(roa_2)))
-            except ValueError:
-                messagebox.showerror(title="Value Error",
-                                     message="Please insert a number as ROA")
-                errors_detected = True
-
-        # show message if none of the checkboxes are selected
-        if not self.checkbox_1_selected and \
-           not self.checkbox_2_selected and \
-           not errors_detected:
-            messagebox.showerror(title="Empty Statement",
-                                 message="None of the checkboxes are selected. \n"
-                                         "Accordingly, no values will be inserted. \n"
-                                         "Please select at least one combobox.")
-            errors_detected = True
-
-        # get list of years for which ROA values are already in the database
-        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
-                                                                            self.insert_type + "s",
-                                                                            self.current_share_id)
-        list_duplicated_years = []
-
-        # catch each year which has already a ROA value
-        for y, p in values_to_be_inserted:
-            if y in list_existing_years:
-                list_duplicated_years.append(y)
-
-        # show message which years are already existent
-        if len(list_duplicated_years) > 0 and not errors_detected:
-            message_text = "ROA(s) for "
-
-            for each_year in list_duplicated_years:
-                message_text += str(each_year) + " "
-
-            message_text += "already exist(s). \nPlease use Update section to change the values."
-            messagebox.showerror(title="Year(s) exist already",
-                                 message=message_text)
-            errors_detected = True
-
-        values_per_entry = {}
-
-        # if no errors are found so far, we can insert the values in the database
-        if not errors_detected:
-
-            ts_current_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # create a dictionary with all values for each year
-            values_per_entry.update({"year": list([y for y, p in values_to_be_inserted])})
-            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
-                                                       ])})
-            values_per_entry.update({self.insert_type: list([p for y, p in values_to_be_inserted])})
-            values_per_entry.update({"valid_from": list([ts_current_time for i in range(len(values_to_be_inserted))])})
-            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
-                                                       ])})
-
-            # finally perform insert into db
-            error = DB_Communication.insert_into_data_table(self.db_connection, self.insert_type, values_per_entry)
-
-            if error is None:
-                self.update_frame()
-                messagebox.showinfo(title="Success!",
-                                    message="The configured has been successfully created in the database.")
-            else:
-                messagebox.showerror(title="DB Error",
-                                     message="An error has occurred. Please try again."
-                                             "In case the error remains, please restart the application")
 
 
 class InsertLeveragePage(ParentInsertPage):
