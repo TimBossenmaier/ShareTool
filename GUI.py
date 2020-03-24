@@ -1044,6 +1044,17 @@ class ParentInsertPage(BasicPage):
         self.scrolledtext_data = ScrolledText(self, width=25, height=11, wrap='word')
         self.scrolledtext_data.place(x=750, y=300, anchor='center')
 
+        # create list for all entry elements
+        self.list_entries = []
+
+        # create list for all checkbox elements
+        self.list_checkboxes = []
+        self.list_checkboxes_vars = []
+
+        # create list for all spinbox elements
+        self.list_spinboxes = []
+        self.list_spinboxes_vars = []
+
     def update_frame(self):
         """
            update the frame's components
@@ -1113,7 +1124,109 @@ class ParentInsertPage(BasicPage):
         Placeholder method
         :return: None
         """
-        pass
+
+        errors_detected = False
+
+        # get the current share ID selected in the combobox
+        try:
+            self.current_share_id = self.df_shares.ID[self.df_shares.company_name == self.combobox_shares.get()].iloc[0]
+        except IndexError:
+            messagebox.showerror(title="No selection",
+                                 message="No combobox item selected! \n"
+                                         "Please select a share to which the " + self.insert_type +
+                                         " value should refer.")
+            errors_detected = True
+
+        # get the inserted data values
+        list_data_values = []
+        for each_entry in self.list_entries:
+            list_data_values.append(each_entry.get())
+
+        values_to_be_inserted = []
+
+        # control for each checkbox whether inputs are valid and consistent
+        # - if a checkbox is selected the corresponding value has to be inserted
+        # - the inserted value has to be a float
+
+        for each_checkbox_var, each_value, i in zip(self.list_checkboxes_vars, list_data_values,
+                                                    range(len(list_data_values))):
+
+            if not errors_detected:
+
+                if each_checkbox_var.get() and each_value == '':
+                    messagebox.showerror(title="Missing " + self.insert_type + "s",
+                                         message=self.insert_type + " input is empty, \n"
+                                                 "Please specify a " + self.insert_type + " value or toggle a checkbox.")
+                    errors_detected = True
+
+                if each_checkbox_var.get() and each_value != '':
+                    try:
+                        values_to_be_inserted.append((self.list_spinboxes_vars[i].get(), float(each_value)))
+                    except ValueError:
+                        messagebox.showerror(title="Value Error",
+                                             message="Please insert a number as " + self.insert_type + "value.")
+                        errors_detected = True
+
+        # show a message if none of the checkboxes are selected
+        for idx, each_checkbox_var in enumerate(self.list_checkboxes_vars):
+            if not errors_detected and not each_checkbox_var.get():
+                messagebox.showerror(title="Empty Statement",
+                                     message="None of the checkboxes are selected. \n"
+                                             "Accordingly, no values will be inserted. \n"
+                                             "Please select at least one combobox.")
+                errors_detected = True
+
+        # get a list of years for which values are already in the database (only for current insert type)
+        list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
+                                                                            self.insert_type + "s",
+                                                                            self.current_share_id)
+
+        list_duplicated_years = []
+
+        # catch each year which has already a value of the insert type
+        for y, p in values_to_be_inserted:
+            if y in list_existing_years:
+                list_duplicated_years.append(y)
+
+        # show message which years are already existent
+        if len(list_duplicated_years) > 0 and not errors_detected:
+            message_text = self.insert_type + "(s) for "
+
+            for each_year in list_duplicated_years:
+                message_text += str(each_year) + " "
+
+            message_text += "already exist(s). \nPlease use Update section to change the values."
+            messagebox.showerror(title="Year(s) exist already",
+                                 message=message_text)
+            errors_detected = True
+
+        values_per_entry = {}
+
+        # if no errors are found so far, we can insert the values in the database
+        if not errors_detected:
+
+            ts_current_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # create a dictionary with all values for each year
+            values_per_entry.update({"year": list([y  for y,p in values_to_be_inserted])})
+            values_per_entry.update({"share_ID": list([self.current_share_id for i in range(len(values_to_be_inserted))
+                                                       ])})
+            values_per_entry.update({self.insert_type: list([p for y,p in values_to_be_inserted])})
+            values_per_entry.update({"valid_from": list([ts_current_time for i in range(len(values_to_be_inserted))])})
+            values_per_entry.update({"valid_to": list(['9999-12-31 23:59:59' for i in range(len(values_to_be_inserted))
+                                                       ])})
+
+            # finally perform insert into db
+            error = DB_Communication.insert_into_data_table(self.db_connection, self.insert_type, values_per_entry)
+
+            if error is None:
+                self.update_frame()
+                messagebox.showinfo(title="Success!",
+                                    message="The configured data has been successfully created in the database.")
+            else:
+                messagebox.showerror(title="DB Error",
+                                     message="An error has occurred. Please try again."
+                                             "In case the error remains, please restart the application.")
 
 
 class InsertProfitsPage(ParentInsertPage):
