@@ -1568,7 +1568,7 @@ class InsertLiquidityPage(ParentInsertPage):
     based on ParentInsertPage
     """
 
-    def __init(self, parent, controller):
+    def __init__(self, parent, controller):
 
         super().__init__(parent, controller, insert_type="liquidity")
 
