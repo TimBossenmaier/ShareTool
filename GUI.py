@@ -1232,10 +1232,17 @@ class ParentInsertPage(BasicPage):
 
         list_existing_years = []
         if not errors_detected:
-            # get a list of years for which values are already in the database (only for current insert type)
-            list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
-                                                                                self.insert_type + "s",
-                                                                                self.current_share_id)
+
+            if self.insert_type == "liquidity":
+                # get a list of years for which values are already in the database (only for current insert type)
+                list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
+                                                                                    "liquidities",
+                                                                                    self.current_share_id)
+            else:
+                # get a list of years for which values are already in the database (only for current insert type)
+                list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
+                                                                                    self.insert_type + "s",
+                                                                                    self.current_share_id)
 
         list_duplicated_years = []
 
