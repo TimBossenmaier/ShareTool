@@ -373,6 +373,11 @@ def get_data_for_specific_share(sql_cursor, share_id, table_name):
         sql_query = 'SELECT tab.year, tab.' + '	debt_to_equity_ratio' + ' FROM entities.shares share ' \
                     'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
                     'WHERE share."ID" = ' + str(share_id)
+
+    if table_name == 'liquidity':
+        sql_query = 'SELECT tab.year, tab.' + '	current_ratio' + ' FROM entities.shares share ' \
+                    'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
+                    'WHERE share."ID" = ' + str(share_id)
     else:
         sql_query = 'SELECT tab.year, tab.' + table_name[:-1] + ' FROM entities.shares share ' \
                     'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
