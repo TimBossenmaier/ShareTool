@@ -1518,7 +1518,7 @@ class InsertLeveragePage(ParentInsertPage):
         self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_2)
         self.spinbox_year_2.place(x=225, y=250, anchor='center')
-        self.list_checkboxes.append(self.spinbox_year_2)
+        self.list_spinboxes.append(self.spinbox_year_2)
 
         # create input for leverage 2
         self.entry_leverage_2 = ttk.Entry(self)
@@ -1535,3 +1535,57 @@ class InsertLeveragePage(ParentInsertPage):
         """
 
         self.update_parent_elements_on_frame()
+
+
+class InsertLiquiditiesPage(ParentInsertPage):
+    """
+    Page allows user to new Liquidity entries for a specific share
+    based on ParentInsertPage
+    """
+
+    def __init(self, parent, controller):
+
+        super().__init__(parent, controller, insert_type="liquidity")
+
+        # create checkbox for the first year
+        self.checkbox_1_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_1_selected)
+        self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
+        self.checkbox_year_1.place(x=125, y=200, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_1)
+
+        # create input box for year 1
+        self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.list_spinboxes_vars.append(self.spinbox_var_1)
+        self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_1)
+        self.spinbox_year_1.place(x=225, y=200, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_1)
+
+        # create input for liquidity 1
+        self.entry_liquidity_1 = ttk.Entry(self)
+        self.entry_liquidity_1.place(x=425, y=200, anchor='center')
+        self.list_entries.append(self.entry_liquidity_1)
+
+        # crate checkbox for second year
+        self.checkbox_2_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_2_selected)
+        self.checkbox_year_2 = ttk.Checkbutton(self, var=self.checkbox_2_selected)
+        self.checkbox_year_2.place(x=125, y=250, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_2)
+
+        # create input box for year 2
+        self.spinbox_var_2 = tk.IntVar(value=self.create_five_year_range()[-2])
+        self.list_spinboxes_vars.append(self.spinbox_var_2)
+        self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_2)
+        self.spinbox_year_2.place(x=225, y=250, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_2)
+
+        # create input for liquidity 2
+        self.entry_liquidity_2 = ttk.Entry(self)
+        self.entry_liquidity_2.place(x=425, y=250, anchor='center')
+        self.list_entries.append(self.entry_liquidity_2)
+
+        # rearrange insert_button
+        self.button_insert_data.place(x=480, y=375, anchor='center')
