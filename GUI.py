@@ -1143,10 +1143,18 @@ class ParentInsertPage(BasicPage):
 
             existing_data = ""
 
+            list_data = None
+
             # get tuples for year and profit for the current share as a list
-            list_data = DB_Communication.get_data_for_specific_share(self.db_connection.cursor(),
-                                                                     self.current_share_id,
-                                                                     self.insert_type + "s")
+            if self.insert_type == 'liquidity':
+                list_data = DB_Communication.get_data_for_specific_share(self.db_connection.cursor(),
+                                                                         self.current_share_id,
+                                                                         "liquidities")
+            else:
+                list_data = DB_Communication.get_data_for_specific_share(self.db_connection.cursor(),
+                                                                         self.current_share_id,
+                                                                         self.insert_type + "s")
+
             # create text according to query results
             if len(list_data) > 0:
                 for each_datum in list_data:
