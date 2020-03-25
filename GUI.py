@@ -156,6 +156,7 @@ class ShareToolGUI(tk.Tk):
         self.menu_insert_data = tk.Menu(self.menubar, tearoff=0)
         self.menu_insert_data.add_command(label="Cashflow", command=self.menu_bar_open_create_cashflows)
         self.menu_insert_data.add_command(label='Leverages', command=self.menu_bar_open_create_leverages)
+        self.menu_insert_data.add_command(label='Liquidity', command=self.menu_bar_open_create_liquidities)
         self.menu_insert_data.add_command(label="Profits", command=self.menu_bar_open_create_profits)
         self.menu_insert_data.add_command(label="ROAs", command=self.menu_bar_open_create_roas)
 
@@ -370,6 +371,30 @@ class ShareToolGUI(tk.Tk):
         Creates page as well if required
         :return: None
         """
+        # TODO: one funtion for all menu bars
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message='Please first ensure the database connection to be established')
+
+        # check whether InsertLeveragePage exists already
+        elif InsertLeveragePage in self.frames.keys():
+            self.show_frame(InsertLeveragePage)
+
+        # create InsertLeveragePage if not
+        else:
+            self.create_page(InsertLeveragePage)
+            self.show_frame(InsertLeveragePage)
+
+    def menu_bar_open_create_liquidities(self):
+        """
+        Opens a frame allowing the user to create new liquidity entries
+        Creates page as well if required
+        :return: None
+        """
+
+        # TODO: one funtion for all menu bars
 
         # db_connection is prerequisite for this page
         if self.db_connection is None:
@@ -377,13 +402,13 @@ class ShareToolGUI(tk.Tk):
                                 message='Please first ensure the database connection to be established')
 
         # check whether InsertROAPage exists already
-        elif InsertROAPage in self.frames.keys():
-            self.show_frame(InsertLeveragePage)
+        elif InsertLiquidityPage in self.frames.keys():
+            self.show_frame(InsertLiquidityPage)
 
-        # create InsertROAPage if not
+        # create InsertLiquidityPage if not
         else:
-            self.create_page(InsertLeveragePage)
-            self.show_frame(InsertLeveragePage)
+            self.create_page(InsertLiquidityPage)
+            self.show_frame(InsertLiquidityPage)
 
 
 class BasicPage(tk.Frame):
@@ -1537,7 +1562,7 @@ class InsertLeveragePage(ParentInsertPage):
         self.update_parent_elements_on_frame()
 
 
-class InsertLiquiditiesPage(ParentInsertPage):
+class InsertLiquidityPage(ParentInsertPage):
     """
     Page allows user to new Liquidity entries for a specific share
     based on ParentInsertPage
