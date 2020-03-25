@@ -156,6 +156,7 @@ class ShareToolGUI(tk.Tk):
         self.menu_insert_data = tk.Menu(self.menubar, tearoff=0)
         self.menu_insert_data.add_command(label="Cashflow", command=self.menu_bar_open_create_cashflows)
         self.menu_insert_data.add_command(label='Leverages', command=self.menu_bar_open_create_leverages)
+        self.menu_insert_data.add_command(label='Liquidity', command=self.menu_bar_open_create_liquidities)
         self.menu_insert_data.add_command(label="Profits", command=self.menu_bar_open_create_profits)
         self.menu_insert_data.add_command(label="ROAs", command=self.menu_bar_open_create_roas)
 
@@ -370,6 +371,30 @@ class ShareToolGUI(tk.Tk):
         Creates page as well if required
         :return: None
         """
+        # TODO: one funtion for all menu bars
+
+        # db_connection is prerequisite for this page
+        if self.db_connection is None:
+            messagebox.showinfo(title='Not possible yet!',
+                                message='Please first ensure the database connection to be established')
+
+        # check whether InsertLeveragePage exists already
+        elif InsertLeveragePage in self.frames.keys():
+            self.show_frame(InsertLeveragePage)
+
+        # create InsertLeveragePage if not
+        else:
+            self.create_page(InsertLeveragePage)
+            self.show_frame(InsertLeveragePage)
+
+    def menu_bar_open_create_liquidities(self):
+        """
+        Opens a frame allowing the user to create new liquidity entries
+        Creates page as well if required
+        :return: None
+        """
+
+        # TODO: one funtion for all menu bars
 
         # db_connection is prerequisite for this page
         if self.db_connection is None:
@@ -377,13 +402,13 @@ class ShareToolGUI(tk.Tk):
                                 message='Please first ensure the database connection to be established')
 
         # check whether InsertROAPage exists already
-        elif InsertROAPage in self.frames.keys():
-            self.show_frame(InsertLeveragePage)
+        elif InsertLiquidityPage in self.frames.keys():
+            self.show_frame(InsertLiquidityPage)
 
-        # create InsertROAPage if not
+        # create InsertLiquidityPage if not
         else:
-            self.create_page(InsertLeveragePage)
-            self.show_frame(InsertLeveragePage)
+            self.create_page(InsertLiquidityPage)
+            self.show_frame(InsertLiquidityPage)
 
 
 class BasicPage(tk.Frame):
@@ -1118,10 +1143,18 @@ class ParentInsertPage(BasicPage):
 
             existing_data = ""
 
+            list_data = None
+
             # get tuples for year and profit for the current share as a list
-            list_data = DB_Communication.get_data_for_specific_share(self.db_connection.cursor(),
-                                                                     self.current_share_id,
-                                                                     self.insert_type + "s")
+            if self.insert_type == 'liquidity':
+                list_data = DB_Communication.get_data_for_specific_share(self.db_connection.cursor(),
+                                                                         self.current_share_id,
+                                                                         "liquidities")
+            else:
+                list_data = DB_Communication.get_data_for_specific_share(self.db_connection.cursor(),
+                                                                         self.current_share_id,
+                                                                         self.insert_type + "s")
+
             # create text according to query results
             if len(list_data) > 0:
                 for each_datum in list_data:
@@ -1199,10 +1232,17 @@ class ParentInsertPage(BasicPage):
 
         list_existing_years = []
         if not errors_detected:
-            # get a list of years for which values are already in the database (only for current insert type)
-            list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
-                                                                                self.insert_type + "s",
-                                                                                self.current_share_id)
+
+            if self.insert_type == "liquidity":
+                # get a list of years for which values are already in the database (only for current insert type)
+                list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
+                                                                                    "liquidities",
+                                                                                    self.current_share_id)
+            else:
+                # get a list of years for which values are already in the database (only for current insert type)
+                list_existing_years = DB_Communication.get_years_for_specific_share(self.db_connection.cursor(),
+                                                                                    self.insert_type + "s",
+                                                                                    self.current_share_id)
 
         list_duplicated_years = []
 
@@ -1518,7 +1558,7 @@ class InsertLeveragePage(ParentInsertPage):
         self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
                                           textvariable=self.spinbox_var_2)
         self.spinbox_year_2.place(x=225, y=250, anchor='center')
-        self.list_checkboxes.append(self.spinbox_year_2)
+        self.list_spinboxes.append(self.spinbox_year_2)
 
         # create input for leverage 2
         self.entry_leverage_2 = ttk.Entry(self)
@@ -1533,5 +1573,67 @@ class InsertLeveragePage(ParentInsertPage):
         update the frame's components
         :return: None
         """
+
+        self.update_parent_elements_on_frame()
+
+
+class InsertLiquidityPage(ParentInsertPage):
+    """
+    Page allows user to new Liquidity entries for a specific share
+    based on ParentInsertPage
+    """
+
+    def __init__(self, parent, controller):
+
+        super().__init__(parent, controller, insert_type="liquidity")
+
+        # create checkbox for the first year
+        self.checkbox_1_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_1_selected)
+        self.checkbox_year_1 = ttk.Checkbutton(self, var=self.checkbox_1_selected)
+        self.checkbox_year_1.place(x=125, y=200, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_1)
+
+        # create input box for year 1
+        self.spinbox_var_1 = tk.IntVar(value=self.create_five_year_range()[-1])
+        self.list_spinboxes_vars.append(self.spinbox_var_1)
+        self.spinbox_year_1 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_1)
+        self.spinbox_year_1.place(x=225, y=200, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_1)
+
+        # create input for liquidity 1
+        self.entry_liquidity_1 = ttk.Entry(self)
+        self.entry_liquidity_1.place(x=425, y=200, anchor='center')
+        self.list_entries.append(self.entry_liquidity_1)
+
+        # crate checkbox for second year
+        self.checkbox_2_selected = tk.BooleanVar()
+        self.list_checkboxes_vars.append(self.checkbox_2_selected)
+        self.checkbox_year_2 = ttk.Checkbutton(self, var=self.checkbox_2_selected)
+        self.checkbox_year_2.place(x=125, y=250, anchor='center')
+        self.list_checkboxes.append(self.checkbox_year_2)
+
+        # create input box for year 2
+        self.spinbox_var_2 = tk.IntVar(value=self.create_five_year_range()[-2])
+        self.list_spinboxes_vars.append(self.spinbox_var_2)
+        self.spinbox_year_2 = ttk.Spinbox(self, values=self.create_five_year_range(), width=8,
+                                          textvariable=self.spinbox_var_2)
+        self.spinbox_year_2.place(x=225, y=250, anchor='center')
+        self.list_spinboxes.append(self.spinbox_year_2)
+
+        # create input for liquidity 2
+        self.entry_liquidity_2 = ttk.Entry(self)
+        self.entry_liquidity_2.place(x=425, y=250, anchor='center')
+        self.list_entries.append(self.entry_liquidity_2)
+
+        # rearrange insert_button
+        self.button_insert_data.place(x=480, y=375, anchor='center')
+
+    def update_frame(self):
+        """
+                update the frame's components
+                :return: None
+                """
 
         self.update_parent_elements_on_frame()

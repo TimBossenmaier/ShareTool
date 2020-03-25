@@ -102,7 +102,10 @@ def get_column_names_from_db_table(sql_cursor, table_name):
     sql_query_table_names = open('./data/sql/get_column_names_for_table.sql', 'r').read()
 
     # append the table tame
-    sql_query_table_names += " '" + table_name + "'"
+    if table_name == 'liquiditys':
+        sql_query_table_names += " '" + "liquidities" + "'"
+    else:
+        sql_query_table_names += " '" + table_name + "'"
 
     # execute sql query and fetch the results
     sql_cursor.execute(sql_query_table_names)
@@ -373,6 +376,11 @@ def get_data_for_specific_share(sql_cursor, share_id, table_name):
         sql_query = 'SELECT tab.year, tab.' + '	debt_to_equity_ratio' + ' FROM entities.shares share ' \
                     'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
                     'WHERE share."ID" = ' + str(share_id)
+
+    if table_name == 'liquidities':
+        sql_query = 'SELECT tab.year, tab.' + '	current_ratio' + ' FROM entities.shares share ' \
+                    'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
+                    'WHERE share."ID" = ' + str(share_id)
     else:
         sql_query = 'SELECT tab.year, tab.' + table_name[:-1] + ' FROM entities.shares share ' \
                     'INNER JOIN data."' + table_name + '" tab on tab."share_ID" = share."ID" ' \
@@ -398,7 +406,10 @@ def create_insert_into_statement(table_name, column_names, returning=False):
     :return: sql statement as a string
     """
 
-    query_string = "INSERT INTO " + table_schema_relation[table_name] + '."' + table_name + '" ('
+    if table_name == "liquiditys":
+        query_string = "INSERT INTO " + table_schema_relation["liquidities"] + '."' + "liquidities" + '" ('
+    else:
+        query_string = "INSERT INTO " + table_schema_relation[table_name] + '."' + table_name + '" ('
 
     # iterate over the columns
     for column, i in zip(column_names, range(1, len(column_names) + 1)):
@@ -493,6 +504,7 @@ def insert_into_data_table(db_connection, table_name, values):
         column_names.remove("ID")
 
         query = create_insert_into_statement(table_name + "s", column_names)
+        print(query)
 
         # special case for profit page due to different column order
         if table_name == "profit":
@@ -508,7 +520,6 @@ def insert_into_data_table(db_connection, table_name, values):
         db_connection.commit()
 
     except BaseException as e:
-
         error_message = str(e)
 
     return error_message
