@@ -1614,3 +1614,11 @@ class InsertLiquidityPage(ParentInsertPage):
 
         # rearrange insert_button
         self.button_insert_data.place(x=480, y=375, anchor='center')
+
+    def update_frame(self):
+        """
+                update the frame's components
+                :return: None
+                """
+
+        self.update_parent_elements_on_frame()
